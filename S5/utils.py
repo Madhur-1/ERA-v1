@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import torch
 from tqdm import tqdm
 
 # Data to plot accuracy and loss graphs
@@ -46,6 +47,7 @@ def train(model, device, train_loader, optimizer, criterion):
 
     train_acc.append(100 * correct / processed)
     train_losses.append(train_loss / len(train_loader))
+    return train_acc, train_losses
 
 
 def test(model, device, test_loader, criterion):
@@ -77,15 +79,4 @@ def test(model, device, test_loader, criterion):
             100.0 * correct / len(test_loader.dataset),
         )
     )
-
-
-fig, axs = plt.subplots(2, 2, figsize=(15, 10))
-axs[0, 0].plot(train_losses)
-axs[0, 0].set_title("Training Loss")
-axs[1, 0].plot(train_acc)
-axs[1, 0].set_title("Training Accuracy")
-axs[0, 1].plot(test_losses)
-axs[0, 1].set_title("Test Loss")
-axs[1, 1].plot(test_acc)
-axs[1, 1].set_title("Test Accuracy")
-plt.plot()
+    return test_acc, test_losses
