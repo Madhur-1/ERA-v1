@@ -19,6 +19,7 @@ class Net(nn.Module):
             nn.BatchNorm2d(32),
         )
         self.conv2 = nn.Sequential(
+            nn.Conv2d(32, 8, kernel_size=1),
             nn.Conv2d(8, 16, kernel_size=3),
             nn.ReLU(),
             nn.BatchNorm2d(16),
