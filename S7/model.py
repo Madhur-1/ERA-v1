@@ -32,7 +32,7 @@ class Net(nn.Module):
             nn.ReLU(),
             nn.BatchNorm2d(10),
         )
-        self.avgpool = nn.AvgPool2d(7)
+        self.avgpool = nn.AvgPool2d(5)
         # self.fc1 = nn.Linear(32, 10)
 
     def forward(self, x):
