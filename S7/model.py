@@ -27,7 +27,7 @@ class Net(nn.Module):
             nn.BatchNorm2d(10),
             nn.Conv2d(10, 10, kernel_size=3),
             nn.ReLU(),
-            nn.BatchNorm2d(16),
+            nn.BatchNorm2d(10),
             nn.Conv2d(10, 10, kernel_size=3),
             nn.ReLU(),
             nn.BatchNorm2d(10),
