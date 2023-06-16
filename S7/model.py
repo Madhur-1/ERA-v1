@@ -1,6 +1,7 @@
 import torch.nn as nn
 import torch.nn.functional as F
 
+
 class Net(nn.Module):
     # This defines the structure of the NN.
     def __init__(self):
@@ -20,8 +21,8 @@ class Net(nn.Module):
         )
         self.conv2 = nn.Sequential(
             nn.Conv2d(20, 10, kernel_size=1),
-            nn.ReLU(),
-            nn.BatchNorm2d(10),
+            # nn.ReLU(),
+            # nn.BatchNorm2d(10),
             nn.Conv2d(10, 10, kernel_size=3),
             nn.ReLU(),
             nn.BatchNorm2d(10),
@@ -37,7 +38,7 @@ class Net(nn.Module):
 
     def forward(self, x):
         x = self.conv1(x)
-        x = F.relu(F.max_pool2d(x, 2))
+        x = F.max_pool2d(x, 2)
         x = self.conv2(x)
         x = self.avgpool(x)
         x = x.view(-1, 10)
