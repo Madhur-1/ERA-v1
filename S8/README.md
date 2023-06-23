@@ -20,16 +20,19 @@ Use of Residual Connection is also advised.
 The above structure with two residual connections is used.
 
 ## Normalization Technique Comparison
+_Note: We use GN with num_groups = 4_
 
 ### Metrics
 |    | Train Acc | Test Acc | Train Loss | Test Loss |
 |----|-----------|----------|------------|-----------|
 | BN | 80.27     | 79.39    | 0.57       | 0.60      |
 | GN | 76.18     | 74.84    | 0.68       | 0.72      |
-| LN | 69.79     | 68.61    | 0.85       | 0.86      |
+| LN | 74.17     | 72.79    | 0.73       | 0.76      |
 
 ## Performance Curves
-![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/6bb7621d-7ae9-4730-8a4e-0db4c563d03b)
+![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/26152e07-ae2a-495b-9f3c-82fb0c2cf0a4)
+
+
 
 ## Confusion Matrices
 
@@ -37,8 +40,9 @@ The above structure with two residual connections is used.
 <div>
     <img src="https://github.com/Madhur-1/ERA-v1/assets/64495917/6cc20003-e120-4d4d-afbf-398512635fb6" width="325px" alt="image 1">
     <img src="https://github.com/Madhur-1/ERA-v1/assets/64495917/53d8861d-8b44-4e02-9788-d277cad72833" width="325px" alt="image 2">
-    <img src="https://github.com/Madhur-1/ERA-v1/assets/64495917/23cdaf9e-cfbd-4b34-a91a-219ae6687d9e" width="325px" alt="image 3">
+    <img src="https://github.com/Madhur-1/ERA-v1/assets/64495917/615a69f9-35c3-4e3d-83bc-11e14dae36d1" width="325px" alt="image 3">
 </div>
+
 
 ## Misclassified Images
 **Batch Norm**
@@ -59,4 +63,6 @@ Total Incorrect Preds = 2516
 
 Total Incorrect Preds = 3139
 
-![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/ffd45910-78ec-42ea-b9c3-f2bb271da12f)
+![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/597361a4-cfcf-412a-9e92-85f19a97d9f0)
+
+We see that the misclassified images in all three models have classes very close to each other as misclassified. The misclassified images would be hard for a human to classify too!
