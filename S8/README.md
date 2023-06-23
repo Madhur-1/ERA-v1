@@ -32,7 +32,7 @@ _Note: We use GN with num_groups = 4_
 ## Performance Curves
 ![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/26152e07-ae2a-495b-9f3c-82fb0c2cf0a4)
 
-
+We see that the graphs portray BN > GN (4 groups) > LN consistently in all the training continues. We explore the reason for this in the next sections.
 
 ## Confusion Matrices
 
@@ -65,4 +65,21 @@ Total Incorrect Preds = 3139
 
 ![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/597361a4-cfcf-412a-9e92-85f19a97d9f0)
 
-We see that the misclassified images in all three models have classes very close to each other as misclassified. The misclassified images would be hard for a human to classify too!
+We see that the misclassified images in all three models have classes very close to each other as misclassified. These misclassified images would be hard for a human to classify correctly too!
+
+## Analysis
+The following images have been taken from the paper:
+Wu, Yuxin & He, Kaiming. (2020). Group Normalization. International Journal of Computer Vision. 128. 10.1007/s11263-019-01198-w. 
+
+
+<img width="1030" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/0c107fc8-aafd-489e-92bf-a1b90c1ffc99">
+
+The above shows the evolution of the feature distributions of the last layer of VGG-16 (can be trained w/o normalization).
+
+We see that without normalization, the distributions tend to explode. GN and BN behave qualitatively similarly while being substantially different from the variant that uses no normalization; this phenomenon is also observed for all other convolutional layers.
+
+<img width="557" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/8e36ce1c-ba3d-455e-a06c-259b5819f2ac">
+
+Despite its great success, BN exhibits drawbacks that are also caused by its distinct behaviour of normalizing along the batch dimension. In particular, it is required for BN to work with a sufficiently large batch size (e.g., 32 per worker). A small batch leads to an inaccurate estimation of the batch statistics, and reducing BN’s batch size increases the model error dramatically (Figure 1).
+
+With a batch size of 2 samples, GN has 10.6% lower error than its BN counterpart for ResNet-50 in ImageNet. With a regular batch size, GN is comparably good as BN (with a gap of ∼0.5%) and outperforms other normalization variants. Moreover, although the batch size may change, GN can naturally transfer from pre-training to fine-tuning.
