@@ -32,17 +32,13 @@ The above structure with two residual connections is used.
 ![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/6bb7621d-7ae9-4730-8a4e-0db4c563d03b)
 
 ## Confusion Matrices
-**Batch Norm**
 
-![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/6cc20003-e120-4d4d-afbf-398512635fb6)
-
-**Group Norm**
-
-![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/53d8861d-8b44-4e02-9788-d277cad72833)
-
-**Layer Norm**
-
-![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/23cdaf9e-cfbd-4b34-a91a-219ae6687d9e)
+**Batch Norm | Group Norm | Layer Norm**
+<div>
+    <img src="https://github.com/Madhur-1/ERA-v1/assets/64495917/6cc20003-e120-4d4d-afbf-398512635fb6" width="325px" alt="image 1">
+    <img src="https://github.com/Madhur-1/ERA-v1/assets/64495917/53d8861d-8b44-4e02-9788-d277cad72833" width="325px" alt="image 2">
+    <img src="https://github.com/Madhur-1/ERA-v1/assets/64495917/23cdaf9e-cfbd-4b34-a91a-219ae6687d9e" width="325px" alt="image 3">
+</div>
 
 ## Misclassified Images
 **Batch Norm**
