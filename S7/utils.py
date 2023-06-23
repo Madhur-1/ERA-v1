@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import torch
-from tqdm import tqdm
+from tqdm.notebook import tqdm
 
 # Data to plot accuracy and loss graphs
 train_losses = []

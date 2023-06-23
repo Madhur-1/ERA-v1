@@ -10,10 +10,10 @@ def get_dataloaders(
     num_workers=-1,
     pin_memory=True,
 ):
-    train_data = datasets.MNIST(
+    train_data = datasets.CIFAR10(
         "../data", train=True, download=True, transform=train_transforms
     )
-    test_data = datasets.MNIST(
+    test_data = datasets.CIFAR10(
         "../data", train=False, download=True, transform=test_transforms
     )
     train_loader = torch.utils.data.DataLoader(
