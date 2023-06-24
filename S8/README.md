@@ -117,3 +117,6 @@ With a batch size of 2 samples, GN has 10.6% lower error than its BN counterpart
 
 `We see that for larger batch sizes BN still wins the show which happens in our case as we use a batch size of 64.`
 
+### Parameter Analysis
+Please refer to `parameter_analysis.ipynb`.
+
