@@ -1,4 +1,4 @@
-# Session 8
+# Session 9
 
 ## Introduction
 
@@ -7,116 +7,206 @@ This assignment compares different normalization techniques: **Batch Norm, Layer
 We are presented with a multiclass classification problem on the CIFAR10 dataset.
 
 ### Target
-1. Accuracy > 70%
-2. Number of Parameters < 50k
-3. Epochs <= 20
+1. Accuracy > 85%
+2. Number of Parameters < 200k
+3. RF > 44
 
-Use of Residual Connection is also advised.
+## Structure
 
-## Implementation
+<img width="310" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/b67961de-de6f-4767-aa47-010640854b8f">
 
-<img src="https://github.com/Madhur-1/ERA-v1/assets/64495917/f1241563-94ca-4e63-ba68-32b0401741ca" width="300px" alt="image">
-
-The above structure with two residual connections is used.
-
-## Normalization Technique Comparison
-_Note: We use GN with num_groups = 4_
 
 ### Metrics
-|    | Train Acc | Test Acc | Train Loss | Test Loss |
-|----|-----------|----------|------------|-----------|
-| BN | 80.27     | 79.39    | 0.57       | 0.60      |
-| GN | 76.18     | 74.84    | 0.68       | 0.72      |
-| LN | 74.17     | 72.79    | 0.73       | 0.76      |
+| Train Acc | Test Acc | Train Loss | Test Loss |
+|-----------|----------|------------|-----------|
+| 86.75     | 85.43    | 0.38       | 0.44      |
 
-## Performance Curves
-![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/26152e07-ae2a-495b-9f3c-82fb0c2cf0a4)
+
+## Performance Curve
+![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/b28d3855-1d60-443b-a7b3-ebcf46df50e1)
 
 We see that the graphs portray BN > GN (4 groups) > LN consistently in all the training continues. We explore the reason for this in the next sections.
 
-## Confusion Matrices
+## Confusion Matrix
 
-**Batch Norm | Group Norm | Layer Norm**
-<div>
-    <img src="https://github.com/Madhur-1/ERA-v1/assets/64495917/6cc20003-e120-4d4d-afbf-398512635fb6" width="325px" alt="image 1">
-    <img src="https://github.com/Madhur-1/ERA-v1/assets/64495917/53d8861d-8b44-4e02-9788-d277cad72833" width="325px" alt="image 2">
-    <img src="https://github.com/Madhur-1/ERA-v1/assets/64495917/615a69f9-35c3-4e3d-83bc-11e14dae36d1" width="325px" alt="image 3">
-</div>
+![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/9c27e104-4cd7-43f8-8346-259ee755f38a)
 
+## Data Exploration
+
+![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/ccfd4c54-b52a-4981-8026-e5f87ceefb3f)
+
+```python
+# Train data transformations
+train_transforms = A.Compose(
+    [
+        A.HorizontalFlip(p=0.5),
+        A.ShiftScaleRotate(shift_limit=0.0625, scale_limit=0.2, rotate_limit=10, p=0.2),
+        A.PadIfNeeded(min_height=64, min_width=64, always_apply=True, border_mode=0),
+        A.CoarseDropout(
+            p=0.2,
+            max_holes=1,
+            max_height=16,
+            max_width=16,
+            min_holes=1,
+            min_height=16,
+            min_width=16,
+            fill_value=(0.4914, 0.4822, 0.4465),
+            mask_fill_value=None,
+        ),
+        A.CenterCrop(height=32, width=32, always_apply=True),
+        A.Normalize((0.4914, 0.4822, 0.4465), (0.247, 0.243, 0.261)),
+        ToTensorV2(),
+    ]
+)
+
+# Test data transformations
+test_transforms = A.Compose(
+    [
+        A.Normalize((0.4914, 0.4822, 0.4465), (0.247, 0.243, 0.261)),
+        ToTensorV2(),
+    ]
+)
+
+```
+
+As seen above, three transforms from the Albumentations library HoriznotalFlip, ShiftScaleRotate and CourseDropout were used. Note that for CourseDropout the strategy taught in class involving a pipeline Pad->CoarseDropout->Crop is followed.
 
 ## Misclassified Images
-**Batch Norm**
 
-Total Incorrect Preds = 2061
+Total Incorrect Preds = 1457
 
-![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/5f376c40-f1ad-4c04-8fda-a48f68e0750f)
+![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/c16bb413-761c-4f71-b970-562f7199d347)
 
-
-**Group Norm**
-
-Total Incorrect Preds = 2516
-
-![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/71a45708-534e-4bf6-a3b9-4956fae1dc51)
-
-
-**Layer Norm**
-
-Total Incorrect Preds = 3139
-
-![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/597361a4-cfcf-412a-9e92-85f19a97d9f0)
 
 We see that the misclassified images in all three models have classes very close to each other as misclassified. These misclassified images would be hard for a human to classify correctly too!
 
-## Analysis
-The following content have been taken from the paper:
-Wu, Yuxin & He, Kaiming. (2020). Group Normalization. International Journal of Computer Vision. 128. 10.1007/s11263-019-01198-w. 
+## Training Log
 
-<img width="1108" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/9afaece1-dbcc-416d-93b6-174388728e9b">
+```
+Adjusting learning rate of group 0 to 1.0000e-02.
+Epoch 1
+Train: 100% Loss=1.4956 Batch_id=781 Accuracy=39.97
+Test set: Average loss: 1.2578, Accuracy: 5274/10000 (52.74%)
 
-### BN
-- Batch Normalization (BN) is a milestone technique in the development of deep learning, enabling various networks to train. However, normalizing along the batch dimension introduces problems — BN’s error increases rapidly when the batch size becomes smaller, caused by inaccurate batch statistics estimation. This limits BN’s usage for training larger models and transferring features to computer vision tasks including detection, segmentation, and video, which require small batches constrained by memory consumption.
-- BN normalizes the features by the mean and variance computed within a (mini)batch. This has been shown by many practices to ease optimization and enable very deep networks to converge. The stochastic uncertainty of the batch statistics also acts as a regularizer that can benefit generalization.
-- But the concept of “batch” is not always present, or it may change from time to time. For example, batch-wise normalization is not legitimate at inference time, so the mean and variance are pre-computed from the training set, often by running average; consequently, there is no normalization performed when testing. The pre-computed statistics may also change when the target data distribution changes. These issues lead to in-consistency at training, transferring, and testing time.
+Adjusting learning rate of group 0 to 1.0000e-02.
+Epoch 2
+Train: 100% Loss=0.7876 Batch_id=781 Accuracy=59.25
+Test set: Average loss: 1.0200, Accuracy: 6448/10000 (64.48%)
 
-### Reasoning for GN
-- The channels of visual representations are not entirely independent.
-- It is not necessary to think of deep neural network features as unstructured vectors. For example, for conv1 (the first convolutional layer) of a network, it is reasonable to expect a filter and its horizontal flipping to exhibit similar distributions of filter responses on natural images. If conv1 happens to approximately learn this pair of filters, or if the horizontal flipping (or other transformations) is made into the architectures by design, then the corresponding channels of these filters can be normalized together.
-- For e.g. if the layer learns Horizontal and Vertical edge detectors, they could be grouped together.
-![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/0a2112b6-743f-47e9-be2a-43f7648b3df6)
+Adjusting learning rate of group 0 to 1.0000e-02.
+Epoch 3
+Train: 100% Loss=0.9778 Batch_id=781 Accuracy=67.66
+Test set: Average loss: 0.8183, Accuracy: 7160/10000 (71.60%)
 
-<img width="548" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/b15bc75d-028d-4757-ab87-1048b69f1080">
+Adjusting learning rate of group 0 to 1.0000e-02.
+Epoch 4
+Train: 100% Loss=0.9351 Batch_id=781 Accuracy=72.50
+Test set: Average loss: 0.6751, Accuracy: 7659/10000 (76.59%)
 
--Specifically, the pixels in the same group are normalized together by the same μ and σ. GN also learns the per-channel γ and β.
+Adjusting learning rate of group 0 to 1.0000e-02.
+Epoch 5
+Train: 100% Loss=0.7785 Batch_id=781 Accuracy=75.87
+Test set: Average loss: 0.6567, Accuracy: 7712/10000 (77.12%)
 
-### GN
-**Relation to LN** `If we set the number of groups to 1, GN becomes LN. LN assumes all channels in a layer make similar contributions and thus restrict the system. GN tries to mitigate this becaquse only each group shares common mean and variance.`
+Adjusting learning rate of group 0 to 1.0000e-02.
+Epoch 6
+Train: 100% Loss=0.8927 Batch_id=781 Accuracy=77.46
+Test set: Average loss: 0.6362, Accuracy: 7852/10000 (78.52%)
 
-**Relation to IN** `GN becomes IN if we set the number of groups to C (1 group per channel). But IN only relies on the spatial dimension for computing the mean and variance and thus misses the opportunity of exploiting the channel dependence.`
+Adjusting learning rate of group 0 to 1.0000e-02.
+Epoch 7
+Train: 100% Loss=0.5647 Batch_id=781 Accuracy=79.15
+Test set: Average loss: 0.5648, Accuracy: 8076/10000 (80.76%)
 
-**Effect of Group Number**
-- In the extreme case of G = 1, GN is equivalent to LN, and its error rate is higher than all cases of G > 1 studied.
-- In the extreme case of 1 channel per group, GN is equivalent to IN. Even if using as few as 2 channels per group, GN has substantially lower error than IN (25.6% vs. 28.4%). This result shows the effect of grouping channels when performing normalization.
-<img width="470" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/2ce33587-bbac-4f78-9cba-aca48a51ccf8">
+Adjusting learning rate of group 0 to 1.0000e-02.
+Epoch 8
+Train: 100% Loss=0.3892 Batch_id=781 Accuracy=80.39
+Test set: Average loss: 0.5478, Accuracy: 8151/10000 (81.51%)
 
+Adjusting learning rate of group 0 to 1.0000e-03.
+Epoch 9
+Train: 100% Loss=0.3857 Batch_id=781 Accuracy=83.91
+Test set: Average loss: 0.4572, Accuracy: 8411/10000 (84.11%)
 
-### Why Normalization?
-<img width="1030" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/0c107fc8-aafd-489e-92bf-a1b90c1ffc99">
+Adjusting learning rate of group 0 to 1.0000e-03.
+Epoch 10
+Train: 100% Loss=0.8276 Batch_id=781 Accuracy=84.67
+Test set: Average loss: 0.4582, Accuracy: 8428/10000 (84.28%)
 
-The above shows the evolution of the feature distributions of the last layer of VGG-16 (can be trained w/o normalization).
+Adjusting learning rate of group 0 to 1.0000e-03.
+Epoch 11
+Train: 100% Loss=0.0763 Batch_id=781 Accuracy=85.11
+Test set: Average loss: 0.4516, Accuracy: 8468/10000 (84.68%)
 
-We see that without normalization, the distributions tend to explode. GN and BN behave qualitatively similarly while being substantially different from the variant that uses no normalization; this phenomenon is also observed for all other convolutional layers.
+Adjusting learning rate of group 0 to 1.0000e-03.
+Epoch 12
+Train: 100% Loss=0.4092 Batch_id=781 Accuracy=85.17
+Test set: Average loss: 0.4462, Accuracy: 8480/10000 (84.80%)
 
-### Effect of Batch Size for BN
-<img width="557" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/8e36ce1c-ba3d-455e-a06c-259b5819f2ac">
+Adjusting learning rate of group 0 to 1.0000e-03.
+Epoch 13
+Train: 100% Loss=0.3290 Batch_id=781 Accuracy=85.51
+Test set: Average loss: 0.4437, Accuracy: 8520/10000 (85.20%)
 
-Despite its great success, BN exhibits drawbacks that are also caused by its distinct behaviour of normalizing along the batch dimension. In particular, it is required for BN to work with a sufficiently large batch size (e.g., 32 per worker). A small batch leads to an inaccurate estimation of the batch statistics, and reducing BN’s batch size increases the model error dramatically (Figure 1).
+Adjusting learning rate of group 0 to 1.0000e-03.
+Epoch 14
+Train: 100% Loss=0.3941 Batch_id=781 Accuracy=85.66
+Test set: Average loss: 0.4420, Accuracy: 8485/10000 (84.85%)
 
-With a batch size of 2 samples, GN has 10.6% lower error than its BN counterpart for ResNet-50 in ImageNet. With a regular batch size, GN is comparably good as BN (with a gap of ∼0.5%) and outperforms other normalization variants. Moreover, although the batch size may change, GN can naturally transfer from pre-training to fine-tuning.
+Adjusting learning rate of group 0 to 1.0000e-03.
+Epoch 15
+Train: 100% Loss=0.6335 Batch_id=781 Accuracy=86.00
+Test set: Average loss: 0.4475, Accuracy: 8491/10000 (84.91%)
 
-<img width="473" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/b10485d0-1abf-43ad-80b5-736e95c10e9f">
+Adjusting learning rate of group 0 to 1.0000e-03.
+Epoch 16
+Train: 100% Loss=0.1034 Batch_id=781 Accuracy=86.14
+Test set: Average loss: 0.4407, Accuracy: 8542/10000 (85.42%)
 
-`We see that for larger batch sizes BN still wins the show which happens in our case as we use a batch size of 64.`
+Adjusting learning rate of group 0 to 1.0000e-04.
+Epoch 17
+Train: 100% Loss=0.2676 Batch_id=781 Accuracy=86.70
+Test set: Average loss: 0.4395, Accuracy: 8539/10000 (85.39%)
 
-### Parameter Analysis
-Please refer to `parameter_analysis.ipynb`.
+Adjusting learning rate of group 0 to 1.0000e-04.
+Epoch 18
+Train: 100% Loss=0.0958 Batch_id=781 Accuracy=86.41
+Test set: Average loss: 0.4346, Accuracy: 8533/10000 (85.33%)
 
+Adjusting learning rate of group 0 to 1.0000e-04.
+Epoch 19
+Train: 100% Loss=0.2886 Batch_id=781 Accuracy=86.75
+Test set: Average loss: 0.4358, Accuracy: 8544/10000 (85.44%)
+
+Adjusting learning rate of group 0 to 1.0000e-04.
+Epoch 20
+Train: 100% Loss=0.9737 Batch_id=781 Accuracy=86.82
+Test set: Average loss: 0.4367, Accuracy: 8536/10000 (85.36%)
+
+Adjusting learning rate of group 0 to 1.0000e-04.
+Epoch 21
+Train: 100% Loss=0.5213 Batch_id=781 Accuracy=86.70
+Test set: Average loss: 0.4346, Accuracy: 8545/10000 (85.45%)
+
+Adjusting learning rate of group 0 to 1.0000e-04.
+Epoch 22
+Train: 100% Loss=0.7300 Batch_id=781 Accuracy=86.70
+Test set: Average loss: 0.4344, Accuracy: 8553/10000 (85.53%)
+
+Adjusting learning rate of group 0 to 1.0000e-04.
+Epoch 23
+Train: 100% Loss=0.1984 Batch_id=781 Accuracy=86.84
+Test set: Average loss: 0.4331, Accuracy: 8539/10000 (85.39%)
+
+Adjusting learning rate of group 0 to 1.0000e-04.
+Epoch 24
+Train: 100% Loss=0.7466 Batch_id=781 Accuracy=86.83
+Test set: Average loss: 0.4321, Accuracy: 8547/10000 (85.47%)
+
+Adjusting learning rate of group 0 to 1.0000e-05.
+Epoch 25
+Train: 100% Loss=0.3672 Batch_id=781 Accuracy=86.75
+Test set: Average loss: 0.4355, Accuracy: 8543/10000 (85.43%)
+
+Adjusting learning rate of group 0 to 1.0000e-05.
+```
