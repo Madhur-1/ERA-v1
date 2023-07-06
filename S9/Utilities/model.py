@@ -92,7 +92,7 @@ class Net(nn.Module):
         self.C3c3 = nn.Sequential(
             nn.Conv2d(
                 channel_3, channel_4, kernel_size=3, padding=padding, dilation=2
-            ),  # 8x8xchannel_4 | 51
+            ),  # 6x6xchannel_4 | 51
             self.norm(channel_4),
             nn.ReLU(),
             nn.Dropout(dropout_percentage),
@@ -106,7 +106,7 @@ class Net(nn.Module):
                 kernel_size=3,
                 padding=padding,
                 groups=channel_4,
-            ),  # 8x8xchannel_4 | 59
+            ),  # 6x6xchannel_4 | 59
             nn.Conv2d(channel_4 * 2, channel_2, kernel_size=1),
             self.norm(channel_2),
             nn.ReLU(),
@@ -119,7 +119,7 @@ class Net(nn.Module):
                 kernel_size=3,
                 padding=padding,
                 groups=channel_2,
-            ),  # 8x8xchannel_2*2 | 67
+            ),  # 6x6xchannel_2*2 | 67
             nn.Conv2d(channel_2 * 2, channel_3, kernel_size=1),
             self.norm(channel_3),
             nn.ReLU(),
@@ -132,7 +132,7 @@ class Net(nn.Module):
                 kernel_size=3,
                 padding=padding,
                 groups=channel_3,
-            ),  # 8x8xchannel_3*2 | 75
+            ),  # 6x6xchannel_3*2 | 75
             nn.Conv2d(channel_3 * 2, channel_4, kernel_size=1),
             self.norm(channel_4),
             nn.ReLU(),
