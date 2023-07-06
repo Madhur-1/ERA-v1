@@ -2,9 +2,7 @@
 
 ## Introduction
 
-This assignment compares different normalization techniques: **Batch Norm, Layer Norm** and **Group Norm**.
-
-We are presented with a multiclass classification problem on the CIFAR10 dataset.
+This assignment is focussed towards using Dilation and Depthwise separable convolutions to achieve the following target.
 
 ### Target
 1. Accuracy > 85%
@@ -15,6 +13,10 @@ We are presented with a multiclass classification problem on the CIFAR10 dataset
 
 <img width="310" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/b67961de-de6f-4767-aa47-010640854b8f">
 
+1. Given the above structure we achieve a RF of 75.
+2. We use 1 dilated kernel Conv2d-34 with a dilation of 2.
+3. 3 Depthwise separable convolutions Conv2d-49,50,51 are used.
+
 
 ### Metrics
 | Train Acc | Test Acc | Train Loss | Test Loss |
@@ -24,8 +26,6 @@ We are presented with a multiclass classification problem on the CIFAR10 dataset
 
 ## Performance Curve
 ![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/b28d3855-1d60-443b-a7b3-ebcf46df50e1)
-
-We see that the graphs portray BN > GN (4 groups) > LN consistently in all the training continues. We explore the reason for this in the next sections.
 
 ## Confusion Matrix
 
