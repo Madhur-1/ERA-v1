@@ -23,7 +23,7 @@ class Net(nn.Module):
         self.C1c1 = nn.Sequential(
             nn.Conv2d(
                 3, channel_2, kernel_size=3, padding=padding
-            ),  # 32x32x3 -> 32x32xchannel_2 | 3
+            ),  # 32x32x3 | 1 -> 32x32xchannel_2 | 3
             self.norm(channel_2),
             nn.ReLU(),
             nn.Dropout(dropout_percentage),
@@ -76,13 +76,15 @@ class Net(nn.Module):
         self.C3c1 = nn.Sequential(
             nn.Conv2d(
                 channel_4, channel_2, kernel_size=3, padding=padding
-            ),  # 8x8xchannel_2 | 23
+            ),  # 8x8xchannel_2 | 27
             self.norm(channel_2),
             nn.ReLU(),
             nn.Dropout(dropout_percentage),
         )
         self.C3c2 = nn.Sequential(
-            nn.Conv2d(channel_2, channel_3, kernel_size=3, padding=padding),
+            nn.Conv2d(
+                channel_2, channel_3, kernel_size=3, padding=padding
+            ),  # 8x8xchannel_3 | 35
             self.norm(channel_3),
             nn.ReLU(),
             nn.Dropout(dropout_percentage),
@@ -90,7 +92,7 @@ class Net(nn.Module):
         self.C3c3 = nn.Sequential(
             nn.Conv2d(
                 channel_3, channel_4, kernel_size=3, padding=padding, dilation=2
-            ),  # 8x8xchannel_4 | 19
+            ),  # 8x8xchannel_4 | 51
             self.norm(channel_4),
             nn.ReLU(),
             nn.Dropout(dropout_percentage),
@@ -104,7 +106,7 @@ class Net(nn.Module):
                 kernel_size=3,
                 padding=padding,
                 groups=channel_4,
-            ),  # 4x4xchannel_4 | 91
+            ),  # 8x8xchannel_4 | 59
             nn.Conv2d(channel_4 * 2, channel_2, kernel_size=1),
             self.norm(channel_2),
             nn.ReLU(),
@@ -117,7 +119,7 @@ class Net(nn.Module):
                 kernel_size=3,
                 padding=padding,
                 groups=channel_2,
-            ),  # 4x4xchannel_4 | 91
+            ),  # 8x8xchannel_2*2 | 67
             nn.Conv2d(channel_2 * 2, channel_3, kernel_size=1),
             self.norm(channel_3),
             nn.ReLU(),
@@ -130,7 +132,7 @@ class Net(nn.Module):
                 kernel_size=3,
                 padding=padding,
                 groups=channel_3,
-            ),  # 4x4xchannel_4 | 91
+            ),  # 8x8xchannel_3*2 | 75
             nn.Conv2d(channel_3 * 2, channel_4, kernel_size=1),
             self.norm(channel_4),
             nn.ReLU(),
