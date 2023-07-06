@@ -14,7 +14,7 @@ This assignment is focussed towards using Dilation and Depthwise separable convo
 <img width="310" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/b67961de-de6f-4767-aa47-010640854b8f">
 
 1. Given the above structure we achieve a RF of 75.
-2. We use 1 dilated kernel Conv2d-34 with a dilation of 2.
+2. We use 1 dilated kernel Conv2d-35 with a dilation of 2.
 3. 3 Depthwise separable convolutions Conv2d-49,50,51 are used.
 
 
