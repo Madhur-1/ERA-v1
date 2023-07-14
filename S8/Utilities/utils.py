@@ -1,6 +1,6 @@
-import matplotlib.pyplot as plt
 import torch
-from tqdm.notebook import tqdm
+
+# from tqdm.auto import tqdm
 
 # Data to plot accuracy and loss graphs
 train_losses = []
@@ -17,13 +17,14 @@ def GetCorrectPredCount(pPrediction, pLabels):
 
 def train(model, device, train_loader, optimizer, criterion):
     model.train()
-    pbar = tqdm(train_loader)
+    # tqdm._instances.clear()
+    # pbar = tqdm(train_loader, position=0, leave=True, ascii=True)
 
     train_loss = 0
     correct = 0
     processed = 0
 
-    for batch_idx, (data, target) in enumerate(pbar):
+    for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
 
@@ -41,10 +42,16 @@ def train(model, device, train_loader, optimizer, criterion):
         correct += GetCorrectPredCount(pred, target)
         processed += len(data)
 
-        pbar.set_description(
-            desc=f"Train: Loss={loss.item():0.4f} Batch_id={batch_idx} Accuracy={100*correct/processed:0.2f}"
+        print(
+            f"Train: {((batch_idx+1)/len(train_loader))*100:0.0f}% Loss={loss.item():0.4f} Batch_id={batch_idx} Accuracy={100*correct/processed:0.2f}",
+            end="\r",
+            flush=True,
         )
-
+    # pbar.close()
+    # del pbar
+    print(
+        f"Train: {((batch_idx+1)/len(train_loader))*100:0.0f}% Loss={loss.item():0.4f} Batch_id={batch_idx} Accuracy={100*correct/processed:0.2f}",
+    )
     train_acc.append(100 * correct / processed)
     train_losses.append(train_loss / len(train_loader))
     return train_acc, train_losses
@@ -80,3 +87,23 @@ def test(model, device, test_loader, criterion):
         )
     )
     return test_acc, test_losses
+
+
+def get_all_and_incorrect_preds(model, loader, device):
+    incorrect = []
+    all_preds = torch.tensor([])
+    all_labels = torch.tensor([])
+    model.eval()
+    with torch.no_grad():
+        for batch_idx, (data, target) in enumerate(loader):
+            data, target = data.to(device), target.to(device)
+            output = model(data)
+            pred = output.argmax(dim=1).cpu()
+            target = target.cpu()
+            all_preds = torch.cat((all_preds, pred), dim=0)
+            all_labels = torch.cat((all_labels, target), dim=0)
+            for d, t, p, o in zip(data, target, pred, output):
+                if p.eq(t.view_as(p)).item() == False:
+                    incorrect.append((d.cpu(), t, p, o[p.item()].cpu()))
+
+    return all_preds, all_labels, incorrect
