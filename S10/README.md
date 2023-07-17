@@ -1,59 +1,62 @@
-# Session 9
+# Session 10
 
 ## Introduction
 
-This assignment is focussed towards using Dilation and Depthwise separable convolutions to achieve the following target.
+This assignment is focussed towards using One Cycle Policy to achieve the following target.
 
 ### Target
-1. Accuracy > 85%
-2. Number of Parameters < 200k
-3. RF > 44
+1. Accuracy > 90%
+2. Number of Epochs <= 24
+3. Kakao Brain's Architecture
 
 ## Structure
 
-<img width="310" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/b67961de-de6f-4767-aa47-010640854b8f">
-
-1. Given the above structure we achieve a RF of 75.
-2. We use 1 dilated kernel Conv2d-35 with a dilation of 2.
-3. 3 Depthwise separable convolutions Conv2d-49,50,51 are used.
+![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/66e69db2-ca82-4bd9-91c8-1c7651e88bf3)
 
 
 ### Metrics
 | Train Acc | Test Acc | Train Loss | Test Loss |
 |-----------|----------|------------|-----------|
-| 86.75     | 85.43    | 0.38       | 0.44      |
+| 97.60     | 92.82    | 0.07       | 0.02      |
 
 
 ## Performance Curve
-![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/b28d3855-1d60-443b-a7b3-ebcf46df50e1)
+![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/190a876c-4336-4746-aa3c-ada31ca17b9f)
+
 
 ## Confusion Matrix
 
-![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/9c27e104-4cd7-43f8-8346-259ee755f38a)
+![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/18d91c7e-7228-48e5-87f9-b6b9af0b90e1)
+
 
 ## Data Exploration
 
-![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/ccfd4c54-b52a-4981-8026-e5f87ceefb3f)
+![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/1519e581-3b5f-4462-a8f2-07bfe110cf6f)
+
 
 ```python
+import albumentations as A
+from albumentations.pytorch import ToTensorV2
+
 # Train data transformations
 train_transforms = A.Compose(
     [
+        A.PadIfNeeded(min_height=48, min_width=48, always_apply=True, border_mode=0),
+        A.RandomCrop(height=32, width=32, always_apply=True),
         A.HorizontalFlip(p=0.5),
-        A.ShiftScaleRotate(shift_limit=0.0625, scale_limit=0.2, rotate_limit=10, p=0.2),
-        A.PadIfNeeded(min_height=64, min_width=64, always_apply=True, border_mode=0),
+        # A.PadIfNeeded(min_height=64, min_width=64, always_apply=True, border_mode=0),
         A.CoarseDropout(
             p=0.2,
             max_holes=1,
-            max_height=16,
-            max_width=16,
+            max_height=8,
+            max_width=8,
             min_holes=1,
-            min_height=16,
-            min_width=16,
+            min_height=8,
+            min_width=8,
             fill_value=(0.4914, 0.4822, 0.4465),
             mask_fill_value=None,
         ),
-        A.CenterCrop(height=32, width=32, always_apply=True),
+        # A.CenterCrop(height=32, width=32, always_apply=True),
         A.Normalize((0.4914, 0.4822, 0.4465), (0.247, 0.243, 0.261)),
         ToTensorV2(),
     ]
@@ -69,13 +72,35 @@ test_transforms = A.Compose(
 
 ```
 
-As seen above, three transforms from the Albumentations library HoriznotalFlip, ShiftScaleRotate and CourseDropout were used. Note that for CourseDropout the strategy taught in class involving a pipeline Pad->CoarseDropout->Crop is followed.
+As seen above, three transforms from the Albumentations library RandomCrop, HoriznotalFlip and CourseDropout were used.
+
+## LR Finder
+
+![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/4621c76f-2f3c-432a-807b-2d81ed764149)
+
+`LR suggestion: steepest gradient
+Suggested LR: 2.00E-03`
+
+From the above figure we can see that the optimal lr is found using the steepest gradient at the 2.00E-03 point. Please note the setting for the lr_finder was the following:
+
+```python
+from torch_lr_finder import LRFinder
+model = Net(dropout_percentage=0.02, norm="bn").to(device)
+optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-4)
+criterion = F.cross_entropy
+
+lr_finder = LRFinder(model, optimizer, criterion, device="cuda")
+lr_finder.range_test(train_loader, end_lr=10, num_iter=200, step_mode="exp")
+lr_finder.plot() # to inspect the loss-learning rate graph
+lr_finder.reset() # to reset the model and optimizer to their initial state
+```
 
 ## Misclassified Images
 
-Total Incorrect Preds = 1457
+Total Incorrect Preds = 718
 
-![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/c16bb413-761c-4f71-b970-562f7199d347)
+![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/042dae8d-e5d6-452c-82e7-6f6082a20bd5)
+
 
 
 We see that the misclassified images in all three models have classes very close to each other as misclassified. These misclassified images would be hard for a human to classify correctly too!
@@ -83,130 +108,99 @@ We see that the misclassified images in all three models have classes very close
 ## Training Log
 
 ```
-Adjusting learning rate of group 0 to 1.0000e-02.
 Epoch 1
-Train: 100% Loss=1.4956 Batch_id=781 Accuracy=39.97
-Test set: Average loss: 1.2578, Accuracy: 5274/10000 (52.74%)
+Train: 100% Loss=1.3700 Batch_id=97 Accuracy=37.17
+Test set: Average loss: 1.4286, Accuracy: 4981/10000 (49.81%)
 
-Adjusting learning rate of group 0 to 1.0000e-02.
 Epoch 2
-Train: 100% Loss=0.7876 Batch_id=781 Accuracy=59.25
-Test set: Average loss: 1.0200, Accuracy: 6448/10000 (64.48%)
+Train: 100% Loss=0.9111 Batch_id=97 Accuracy=60.19
+Test set: Average loss: 0.9862, Accuracy: 6653/10000 (66.53%)
 
-Adjusting learning rate of group 0 to 1.0000e-02.
 Epoch 3
-Train: 100% Loss=0.9778 Batch_id=781 Accuracy=67.66
-Test set: Average loss: 0.8183, Accuracy: 7160/10000 (71.60%)
+Train: 100% Loss=0.7911 Batch_id=97 Accuracy=70.60
+Test set: Average loss: 0.8489, Accuracy: 7104/10000 (71.04%)
 
-Adjusting learning rate of group 0 to 1.0000e-02.
 Epoch 4
-Train: 100% Loss=0.9351 Batch_id=781 Accuracy=72.50
-Test set: Average loss: 0.6751, Accuracy: 7659/10000 (76.59%)
+Train: 100% Loss=0.7288 Batch_id=97 Accuracy=75.67
+Test set: Average loss: 0.7319, Accuracy: 7571/10000 (75.71%)
 
-Adjusting learning rate of group 0 to 1.0000e-02.
 Epoch 5
-Train: 100% Loss=0.7785 Batch_id=781 Accuracy=75.87
-Test set: Average loss: 0.6567, Accuracy: 7712/10000 (77.12%)
+Train: 100% Loss=0.6057 Batch_id=97 Accuracy=78.72
+Test set: Average loss: 0.7781, Accuracy: 7429/10000 (74.29%)
 
-Adjusting learning rate of group 0 to 1.0000e-02.
 Epoch 6
-Train: 100% Loss=0.8927 Batch_id=781 Accuracy=77.46
-Test set: Average loss: 0.6362, Accuracy: 7852/10000 (78.52%)
+Train: 100% Loss=0.4106 Batch_id=97 Accuracy=80.97
+Test set: Average loss: 0.4810, Accuracy: 8346/10000 (83.46%)
 
-Adjusting learning rate of group 0 to 1.0000e-02.
 Epoch 7
-Train: 100% Loss=0.5647 Batch_id=781 Accuracy=79.15
-Test set: Average loss: 0.5648, Accuracy: 8076/10000 (80.76%)
+Train: 100% Loss=0.4909 Batch_id=97 Accuracy=83.93
+Test set: Average loss: 0.4627, Accuracy: 8418/10000 (84.18%)
 
-Adjusting learning rate of group 0 to 1.0000e-02.
 Epoch 8
-Train: 100% Loss=0.3892 Batch_id=781 Accuracy=80.39
-Test set: Average loss: 0.5478, Accuracy: 8151/10000 (81.51%)
+Train: 100% Loss=0.3857 Batch_id=97 Accuracy=85.09
+Test set: Average loss: 0.4717, Accuracy: 8450/10000 (84.50%)
 
-Adjusting learning rate of group 0 to 1.0000e-03.
 Epoch 9
-Train: 100% Loss=0.3857 Batch_id=781 Accuracy=83.91
-Test set: Average loss: 0.4572, Accuracy: 8411/10000 (84.11%)
+Train: 100% Loss=0.4860 Batch_id=97 Accuracy=86.98
+Test set: Average loss: 0.3980, Accuracy: 8678/10000 (86.78%)
 
-Adjusting learning rate of group 0 to 1.0000e-03.
 Epoch 10
-Train: 100% Loss=0.8276 Batch_id=781 Accuracy=84.67
-Test set: Average loss: 0.4582, Accuracy: 8428/10000 (84.28%)
+Train: 100% Loss=0.4478 Batch_id=97 Accuracy=88.24
+Test set: Average loss: 0.4256, Accuracy: 8609/10000 (86.09%)
 
-Adjusting learning rate of group 0 to 1.0000e-03.
 Epoch 11
-Train: 100% Loss=0.0763 Batch_id=781 Accuracy=85.11
-Test set: Average loss: 0.4516, Accuracy: 8468/10000 (84.68%)
+Train: 100% Loss=0.3112 Batch_id=97 Accuracy=89.44
+Test set: Average loss: 0.5296, Accuracy: 8377/10000 (83.77%)
 
-Adjusting learning rate of group 0 to 1.0000e-03.
 Epoch 12
-Train: 100% Loss=0.4092 Batch_id=781 Accuracy=85.17
-Test set: Average loss: 0.4462, Accuracy: 8480/10000 (84.80%)
+Train: 100% Loss=0.3254 Batch_id=97 Accuracy=90.11
+Test set: Average loss: 0.3613, Accuracy: 8841/10000 (88.41%)
 
-Adjusting learning rate of group 0 to 1.0000e-03.
 Epoch 13
-Train: 100% Loss=0.3290 Batch_id=781 Accuracy=85.51
-Test set: Average loss: 0.4437, Accuracy: 8520/10000 (85.20%)
+Train: 100% Loss=0.3124 Batch_id=97 Accuracy=90.87
+Test set: Average loss: 0.3943, Accuracy: 8750/10000 (87.50%)
 
-Adjusting learning rate of group 0 to 1.0000e-03.
 Epoch 14
-Train: 100% Loss=0.3941 Batch_id=781 Accuracy=85.66
-Test set: Average loss: 0.4420, Accuracy: 8485/10000 (84.85%)
+Train: 100% Loss=0.2186 Batch_id=97 Accuracy=91.94
+Test set: Average loss: 0.3726, Accuracy: 8779/10000 (87.79%)
 
-Adjusting learning rate of group 0 to 1.0000e-03.
 Epoch 15
-Train: 100% Loss=0.6335 Batch_id=781 Accuracy=86.00
-Test set: Average loss: 0.4475, Accuracy: 8491/10000 (84.91%)
+Train: 100% Loss=0.2087 Batch_id=97 Accuracy=92.40
+Test set: Average loss: 0.4073, Accuracy: 8747/10000 (87.47%)
 
-Adjusting learning rate of group 0 to 1.0000e-03.
 Epoch 16
-Train: 100% Loss=0.1034 Batch_id=781 Accuracy=86.14
-Test set: Average loss: 0.4407, Accuracy: 8542/10000 (85.42%)
+Train: 100% Loss=0.1622 Batch_id=97 Accuracy=93.09
+Test set: Average loss: 0.3162, Accuracy: 9003/10000 (90.03%)
 
-Adjusting learning rate of group 0 to 1.0000e-04.
 Epoch 17
-Train: 100% Loss=0.2676 Batch_id=781 Accuracy=86.70
-Test set: Average loss: 0.4395, Accuracy: 8539/10000 (85.39%)
+Train: 100% Loss=0.1884 Batch_id=97 Accuracy=93.73
+Test set: Average loss: 0.2952, Accuracy: 9066/10000 (90.66%)
 
-Adjusting learning rate of group 0 to 1.0000e-04.
 Epoch 18
-Train: 100% Loss=0.0958 Batch_id=781 Accuracy=86.41
-Test set: Average loss: 0.4346, Accuracy: 8533/10000 (85.33%)
+Train: 100% Loss=0.1617 Batch_id=97 Accuracy=94.28
+Test set: Average loss: 0.2963, Accuracy: 9053/10000 (90.53%)
 
-Adjusting learning rate of group 0 to 1.0000e-04.
 Epoch 19
-Train: 100% Loss=0.2886 Batch_id=781 Accuracy=86.75
-Test set: Average loss: 0.4358, Accuracy: 8544/10000 (85.44%)
+Train: 100% Loss=0.1487 Batch_id=97 Accuracy=94.99
+Test set: Average loss: 0.3057, Accuracy: 9081/10000 (90.81%)
 
-Adjusting learning rate of group 0 to 1.0000e-04.
 Epoch 20
-Train: 100% Loss=0.9737 Batch_id=781 Accuracy=86.82
-Test set: Average loss: 0.4367, Accuracy: 8536/10000 (85.36%)
+Train: 100% Loss=0.1347 Batch_id=97 Accuracy=95.70
+Test set: Average loss: 0.2795, Accuracy: 9151/10000 (91.51%)
 
-Adjusting learning rate of group 0 to 1.0000e-04.
 Epoch 21
-Train: 100% Loss=0.5213 Batch_id=781 Accuracy=86.70
-Test set: Average loss: 0.4346, Accuracy: 8545/10000 (85.45%)
+Train: 100% Loss=0.0768 Batch_id=97 Accuracy=96.08
+Test set: Average loss: 0.2616, Accuracy: 9221/10000 (92.21%)
 
-Adjusting learning rate of group 0 to 1.0000e-04.
 Epoch 22
-Train: 100% Loss=0.7300 Batch_id=781 Accuracy=86.70
-Test set: Average loss: 0.4344, Accuracy: 8553/10000 (85.53%)
+Train: 100% Loss=0.0721 Batch_id=97 Accuracy=96.82
+Test set: Average loss: 0.2476, Accuracy: 9244/10000 (92.44%)
 
-Adjusting learning rate of group 0 to 1.0000e-04.
 Epoch 23
-Train: 100% Loss=0.1984 Batch_id=781 Accuracy=86.84
-Test set: Average loss: 0.4331, Accuracy: 8539/10000 (85.39%)
+Train: 100% Loss=0.0667 Batch_id=97 Accuracy=97.18
+Test set: Average loss: 0.2417, Accuracy: 9265/10000 (92.65%)
 
-Adjusting learning rate of group 0 to 1.0000e-04.
 Epoch 24
-Train: 100% Loss=0.7466 Batch_id=781 Accuracy=86.83
-Test set: Average loss: 0.4321, Accuracy: 8547/10000 (85.47%)
-
-Adjusting learning rate of group 0 to 1.0000e-05.
-Epoch 25
-Train: 100% Loss=0.3672 Batch_id=781 Accuracy=86.75
-Test set: Average loss: 0.4355, Accuracy: 8543/10000 (85.43%)
-
-Adjusting learning rate of group 0 to 1.0000e-05.
+Train: 100% Loss=0.0868 Batch_id=97 Accuracy=97.60
+Test set: Average loss: 0.2367, Accuracy: 9282/10000 (92.82%)
 ```
