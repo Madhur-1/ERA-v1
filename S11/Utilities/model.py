@@ -148,8 +148,8 @@ class ResNet(nn.Module):
         return out
 
 
-def ResNet18():
-    return ResNet(BasicBlock, [2, 2, 2, 2])
+def ResNet18(dropout_percentage=0.0):
+    return ResNet(BasicBlock, [2, 2, 2, 2], dropout_percentage=dropout_percentage)
 
 
 def ResNet34():
