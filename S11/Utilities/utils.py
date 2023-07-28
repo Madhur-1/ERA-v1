@@ -7,7 +7,16 @@ def GetCorrectPredCount(pPrediction, pLabels):
     return pPrediction.argmax(dim=1).eq(pLabels).sum().item()
 
 
-def train(model, device, train_loader, optimizer, criterion,scheduler, train_losses, train_acc):
+def train(
+    model,
+    device,
+    train_loader,
+    optimizer,
+    criterion,
+    scheduler,
+    train_losses,
+    train_acc,
+):
     model.train()
     # tqdm._instances.clear()
     # pbar = tqdm(train_loader, position=0, leave=True, ascii=True)

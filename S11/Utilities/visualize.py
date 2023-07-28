@@ -5,6 +5,9 @@ import numpy as np
 import pandas as pd
 import seaborn as sn
 import torch
+from pytorch_grad_cam import GradCAM
+from pytorch_grad_cam.utils.image import show_cam_on_image
+from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
 from torchmetrics import ConfusionMatrix
 from torchvision import transforms
 
@@ -98,6 +101,110 @@ def plot_incorrect_preds(incorrect, classes):
         plt.title(
             f"{classes[incorrect[i][1].item()]}|{classes[incorrect[i][2].item()]}",
             # fontsize=8,
+        )
+        plt.xticks([])
+        plt.yticks([])
+    plt.tight_layout()
+
+
+def plot_grad_cam_different_targets(model, loader, classes, device):
+    target_layers = [model.layer3[-1]]
+    _, (input_tensor, target) = next(enumerate(loader))
+    # Get the first image from the batch
+    imput_tensor = input_tensor[0].unsqueeze(0).to(device)
+
+    # Construct the CAM object once, and then re-use it on many images:
+    cam = GradCAM(
+        model=model, target_layers=target_layers, use_cuda=torch.cuda.is_available()
+    )
+
+    fig = plt.figure(figsize=(10, 5))
+    plt.suptitle(f"GradCAM ID | Target Class : {classes[target[0]]}")
+    for i in range(10):
+        plt.subplot(2, 5, i + 1, aspect="auto")
+
+        # Get the CAM
+        grayscale_cam = cam(
+            input_tensor=imput_tensor, targets=[ClassifierOutputTarget(i)]
+        )
+
+        # Get the first image from the batch
+        grayscale_cam = grayscale_cam[0, :]
+
+        unnormalized = transforms.Normalize(
+            (-1.98947368, -1.98436214, -1.71072797), (4.048583, 4.11522634, 3.83141762)
+        )(imput_tensor[0, :])
+        visualization = show_cam_on_image(
+            unnormalized.permute(1, 2, 0).cpu().detach().numpy(),
+            grayscale_cam,
+            use_rgb=True,
+            image_weight=0.6,
+        )
+        plt.imshow(transforms.ToPILImage()(visualization))
+        plt.title(
+            f"GradCAM {i} | {classes[i]}",
+        )
+        plt.xticks([])
+        plt.yticks([])
+    plt.tight_layout()
+
+
+def plot_grad_cam_misclassified(model, incorrect, classes, device):
+    target_layers = [model.layer3[-1]]
+
+    # Construct the CAM object once, and then re-use it on many images:
+    cam = GradCAM(
+        model=model, target_layers=target_layers, use_cuda=torch.cuda.is_available()
+    )
+    fig = plt.figure(figsize=(20, 10))
+    for i in range(10):
+        misclassified_tuple = incorrect[i]
+        input_tensor = misclassified_tuple[0].unsqueeze(0).to(device)
+        target_label = misclassified_tuple[1].item()
+        predicted_label = misclassified_tuple[2].item()
+
+        unnormalized = transforms.Normalize(
+            (-1.98947368, -1.98436214, -1.71072797), (4.048583, 4.11522634, 3.83141762)
+        )(input_tensor[0, :])
+
+        plt.subplot(4, 5, i * 2 + 1, aspect="auto")
+        # Get the CAM
+        grayscale_cam = cam(input_tensor=input_tensor, targets=None)
+
+        # Get the first image from the batch
+        grayscale_cam = grayscale_cam[0, :]
+
+        visualization = show_cam_on_image(
+            unnormalized.permute(1, 2, 0).cpu().detach().numpy(),
+            grayscale_cam,
+            use_rgb=True,
+            image_weight=0.6,
+        )
+        plt.imshow(transforms.ToPILImage()(visualization))
+        plt.title(
+            f"P {classes[predicted_label]} | T {classes[target_label]} | Pred CAM ",
+        )
+        plt.xticks([])
+        plt.yticks([])
+
+        plt.subplot(4, 5, i * 2 + 2, aspect="auto")
+        # Get the CAM
+        grayscale_cam = cam(
+            input_tensor=input_tensor, targets=[ClassifierOutputTarget(target_label)]
+        )
+
+        # Get the first image from the batch
+        grayscale_cam = grayscale_cam[0, :]
+
+        visualization = show_cam_on_image(
+            unnormalized.permute(1, 2, 0).cpu().detach().numpy(),
+            grayscale_cam,
+            use_rgb=True,
+            image_weight=0.6,
+        )
+        plt.imshow(transforms.ToPILImage()(visualization))
+        plt.title(
+            f"P {classes[predicted_label]} | T {classes[target_label]} | Target CAM ",
         )
         plt.xticks([])
         plt.yticks([])
