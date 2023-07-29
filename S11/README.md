@@ -1,37 +1,38 @@
-# Session 10
+# Session 11
 
 ## Introduction
 
-This assignment is focussed towards using One Cycle Policy to achieve the following target.
+This assignment is focussed towards using GradCAM to identify the parts of an input image that most impact the classification score.
 
 ### Target
-1. Accuracy > 90%
-2. Number of Epochs <= 24
-3. Kakao Brain's Architecture
+1. ResNet 18
+2. GradCAM usage
 
 ## Structure
 
-![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/66e69db2-ca82-4bd9-91c8-1c7651e88bf3)
-
+<img width="397" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/9706b3c7-8d6b-4c28-a144-37268c320139">
 
 ### Metrics
 | Train Acc | Test Acc | Train Loss | Test Loss |
 |-----------|----------|------------|-----------|
-| 97.60     | 92.82    | 0.07       | 0.02      |
+| 98.93     | 91.26    | 0.04       | 0.34      |
 
 
 ## Performance Curve
-![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/190a876c-4336-4746-aa3c-ada31ca17b9f)
+![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/7f298fb5-c258-457c-9875-88d6fe0420ed)
+
 
 
 ## Confusion Matrix
 
-![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/18d91c7e-7228-48e5-87f9-b6b9af0b90e1)
+![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/5e8afe1a-5c3b-4b4f-9377-ded0d2cf00cb)
+
 
 
 ## Data Exploration
 
-![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/1519e581-3b5f-4462-a8f2-07bfe110cf6f)
+![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/e0d4b688-0aff-4d43-80d9-9020451cbe5f)
+
 
 
 ```python
@@ -41,22 +42,22 @@ from albumentations.pytorch import ToTensorV2
 # Train data transformations
 train_transforms = A.Compose(
     [
-        A.PadIfNeeded(min_height=48, min_width=48, always_apply=True, border_mode=0),
+        A.PadIfNeeded(min_height=40, min_width=40, always_apply=True, border_mode=0),
         A.RandomCrop(height=32, width=32, always_apply=True),
-        A.HorizontalFlip(p=0.5),
-        # A.PadIfNeeded(min_height=64, min_width=64, always_apply=True, border_mode=0),
+        # A.HorizontalFlip(p=0.5),
+        A.PadIfNeeded(min_height=64, min_width=64, always_apply=True, border_mode=0),
         A.CoarseDropout(
             p=0.2,
             max_holes=1,
-            max_height=8,
-            max_width=8,
+            max_height=16,
+            max_width=16,
             min_holes=1,
-            min_height=8,
-            min_width=8,
+            min_height=16,
+            min_width=16,
             fill_value=(0.4914, 0.4822, 0.4465),
             mask_fill_value=None,
         ),
-        # A.CenterCrop(height=32, width=32, always_apply=True),
+        A.CenterCrop(height=32, width=32, always_apply=True),
         A.Normalize((0.4914, 0.4822, 0.4465), (0.247, 0.243, 0.261)),
         ToTensorV2(),
     ]
@@ -69,10 +70,9 @@ test_transforms = A.Compose(
         ToTensorV2(),
     ]
 )
-
 ```
 
-As seen above, three transforms from the Albumentations library RandomCrop, HoriznotalFlip and CourseDropout were used.
+As seen above, three transforms from the Albumentations library RandomCrop and CourseDropout were used.
 
 ## LR Finder
 
