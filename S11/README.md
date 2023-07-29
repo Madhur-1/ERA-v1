@@ -76,131 +76,129 @@ As seen above, three transforms from the Albumentations library RandomCrop and C
 
 ## LR Finder
 
-![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/4621c76f-2f3c-432a-807b-2d81ed764149)
+![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/e699899f-2179-4946-bacf-202f7fbb156c)
+
 
 `LR suggestion: steepest gradient
-Suggested LR: 2.00E-03`
+Suggested LR: 1.91E-03`
 
-From the above figure we can see that the optimal lr is found using the steepest gradient at the 2.00E-03 point. Please note the setting for the lr_finder was the following:
-
-```python
-from torch_lr_finder import LRFinder
-model = Net(dropout_percentage=0.02, norm="bn").to(device)
-optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-4)
-criterion = F.cross_entropy
-
-lr_finder = LRFinder(model, optimizer, criterion, device="cuda")
-lr_finder.range_test(train_loader, end_lr=10, num_iter=200, step_mode="exp")
-lr_finder.plot() # to inspect the loss-learning rate graph
-lr_finder.reset() # to reset the model and optimizer to their initial state
-```
+From the above figure we can see that the optimal lr is found using the steepest gradient.
 
 ## Misclassified Images
 
-Total Incorrect Preds = 718
+Total Incorrect Preds = 859
 
-![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/042dae8d-e5d6-452c-82e7-6f6082a20bd5)
-
+![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/0ade94d4-ccc4-4163-ac8e-64b751c43bd0)
 
 
 We see that the misclassified images in all three models have classes very close to each other as misclassified. These misclassified images would be hard for a human to classify correctly too!
+
+## GradCAM
+
+### GradCAM for the same image for different grad targets
+
+![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/9a273b3c-ca32-4797-9dfa-1aa1dda7c32c)
+
+We can see that for the given Bird image there are different parts of the image that can be used to support different images.
+1. The birds wings and the sky support the Airplane class
+2. The Bird class is supported by the body of the bird
+3. The legs support Cat class
+4. The neck area support Dog class
+5. The neck and face area supports the Horse class
+
+![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/7fb38da7-c748-4e28-a29c-3a5958aa0b7a)
+
+Similarly:
+1. The Airplane class is supported the body
+2. Automobile class is supported by the components like the body, the wings etc.
+3. The bird class is supported by the beak of the plane.
+
+### GradCAM for Misclassified images
+
+![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/0e89b0c4-f09d-4edc-b7d5-69308fc28668)
+
+In the above set of pictures say for the first Truck we can see that the hood of the trunk supports the predicted automobile class while the whole body supports the target class - This seems fair. The same pattern of identifying objects using different parts of the image is depicted in the GradCAM images.
 
 ## Training Log
 
 ```
 Epoch 1
-Train: 100% Loss=1.3700 Batch_id=97 Accuracy=37.17
-Test set: Average loss: 1.4286, Accuracy: 4981/10000 (49.81%)
+Train: 100% Loss=1.3532 Batch_id=97 Accuracy=39.81
+Test set: Average loss: 1.6397, Accuracy: 4259/10000 (42.59%)
 
 Epoch 2
-Train: 100% Loss=0.9111 Batch_id=97 Accuracy=60.19
-Test set: Average loss: 0.9862, Accuracy: 6653/10000 (66.53%)
+Train: 100% Loss=0.8659 Batch_id=97 Accuracy=59.58
+Test set: Average loss: 1.1223, Accuracy: 6241/10000 (62.41%)
 
 Epoch 3
-Train: 100% Loss=0.7911 Batch_id=97 Accuracy=70.60
-Test set: Average loss: 0.8489, Accuracy: 7104/10000 (71.04%)
+Train: 100% Loss=0.9156 Batch_id=97 Accuracy=69.09
+Test set: Average loss: 1.0250, Accuracy: 6755/10000 (67.55%)
 
 Epoch 4
-Train: 100% Loss=0.7288 Batch_id=97 Accuracy=75.67
-Test set: Average loss: 0.7319, Accuracy: 7571/10000 (75.71%)
+Train: 100% Loss=0.5482 Batch_id=97 Accuracy=75.17
+Test set: Average loss: 1.5539, Accuracy: 5866/10000 (58.66%)
 
 Epoch 5
-Train: 100% Loss=0.6057 Batch_id=97 Accuracy=78.72
-Test set: Average loss: 0.7781, Accuracy: 7429/10000 (74.29%)
+Train: 100% Loss=0.5817 Batch_id=97 Accuracy=78.20
+Test set: Average loss: 0.9223, Accuracy: 7010/10000 (70.10%)
 
 Epoch 6
-Train: 100% Loss=0.4106 Batch_id=97 Accuracy=80.97
-Test set: Average loss: 0.4810, Accuracy: 8346/10000 (83.46%)
+Train: 100% Loss=0.4804 Batch_id=97 Accuracy=81.42
+Test set: Average loss: 0.7703, Accuracy: 7447/10000 (74.47%)
 
 Epoch 7
-Train: 100% Loss=0.4909 Batch_id=97 Accuracy=83.93
-Test set: Average loss: 0.4627, Accuracy: 8418/10000 (84.18%)
+Train: 100% Loss=0.4788 Batch_id=97 Accuracy=84.03
+Test set: Average loss: 0.6842, Accuracy: 7647/10000 (76.47%)
 
 Epoch 8
-Train: 100% Loss=0.3857 Batch_id=97 Accuracy=85.09
-Test set: Average loss: 0.4717, Accuracy: 8450/10000 (84.50%)
+Train: 100% Loss=0.3154 Batch_id=97 Accuracy=86.15
+Test set: Average loss: 0.5369, Accuracy: 8234/10000 (82.34%)
 
 Epoch 9
-Train: 100% Loss=0.4860 Batch_id=97 Accuracy=86.98
-Test set: Average loss: 0.3980, Accuracy: 8678/10000 (86.78%)
+Train: 100% Loss=0.3233 Batch_id=97 Accuracy=87.84
+Test set: Average loss: 0.6117, Accuracy: 8015/10000 (80.15%)
 
 Epoch 10
-Train: 100% Loss=0.4478 Batch_id=97 Accuracy=88.24
-Test set: Average loss: 0.4256, Accuracy: 8609/10000 (86.09%)
+Train: 100% Loss=0.3392 Batch_id=97 Accuracy=89.26
+Test set: Average loss: 0.4898, Accuracy: 8392/10000 (83.92%)
 
 Epoch 11
-Train: 100% Loss=0.3112 Batch_id=97 Accuracy=89.44
-Test set: Average loss: 0.5296, Accuracy: 8377/10000 (83.77%)
+Train: 100% Loss=0.3067 Batch_id=97 Accuracy=90.58
+Test set: Average loss: 0.5270, Accuracy: 8374/10000 (83.74%)
 
 Epoch 12
-Train: 100% Loss=0.3254 Batch_id=97 Accuracy=90.11
-Test set: Average loss: 0.3613, Accuracy: 8841/10000 (88.41%)
+Train: 100% Loss=0.2675 Batch_id=97 Accuracy=91.58
+Test set: Average loss: 0.4969, Accuracy: 8450/10000 (84.50%)
 
 Epoch 13
-Train: 100% Loss=0.3124 Batch_id=97 Accuracy=90.87
-Test set: Average loss: 0.3943, Accuracy: 8750/10000 (87.50%)
+Train: 100% Loss=0.1699 Batch_id=97 Accuracy=92.84
+Test set: Average loss: 0.4825, Accuracy: 8514/10000 (85.14%)
 
 Epoch 14
-Train: 100% Loss=0.2186 Batch_id=97 Accuracy=91.94
-Test set: Average loss: 0.3726, Accuracy: 8779/10000 (87.79%)
+Train: 100% Loss=0.1933 Batch_id=97 Accuracy=93.79
+Test set: Average loss: 0.4436, Accuracy: 8691/10000 (86.91%)
 
 Epoch 15
-Train: 100% Loss=0.2087 Batch_id=97 Accuracy=92.40
-Test set: Average loss: 0.4073, Accuracy: 8747/10000 (87.47%)
+Train: 100% Loss=0.1242 Batch_id=97 Accuracy=94.84
+Test set: Average loss: 0.4924, Accuracy: 8696/10000 (86.96%)
 
 Epoch 16
-Train: 100% Loss=0.1622 Batch_id=97 Accuracy=93.09
-Test set: Average loss: 0.3162, Accuracy: 9003/10000 (90.03%)
+Train: 100% Loss=0.0934 Batch_id=97 Accuracy=95.74
+Test set: Average loss: 0.3843, Accuracy: 8928/10000 (89.28%)
 
 Epoch 17
-Train: 100% Loss=0.1884 Batch_id=97 Accuracy=93.73
-Test set: Average loss: 0.2952, Accuracy: 9066/10000 (90.66%)
+Train: 100% Loss=0.0541 Batch_id=97 Accuracy=96.76
+Test set: Average loss: 0.4266, Accuracy: 8853/10000 (88.53%)
 
 Epoch 18
-Train: 100% Loss=0.1617 Batch_id=97 Accuracy=94.28
-Test set: Average loss: 0.2963, Accuracy: 9053/10000 (90.53%)
+Train: 100% Loss=0.0710 Batch_id=97 Accuracy=97.70
+Test set: Average loss: 0.3712, Accuracy: 9031/10000 (90.31%)
 
 Epoch 19
-Train: 100% Loss=0.1487 Batch_id=97 Accuracy=94.99
-Test set: Average loss: 0.3057, Accuracy: 9081/10000 (90.81%)
+Train: 100% Loss=0.0269 Batch_id=97 Accuracy=98.39
+Test set: Average loss: 0.3610, Accuracy: 9094/10000 (90.94%)
 
 Epoch 20
-Train: 100% Loss=0.1347 Batch_id=97 Accuracy=95.70
-Test set: Average loss: 0.2795, Accuracy: 9151/10000 (91.51%)
-
-Epoch 21
-Train: 100% Loss=0.0768 Batch_id=97 Accuracy=96.08
-Test set: Average loss: 0.2616, Accuracy: 9221/10000 (92.21%)
-
-Epoch 22
-Train: 100% Loss=0.0721 Batch_id=97 Accuracy=96.82
-Test set: Average loss: 0.2476, Accuracy: 9244/10000 (92.44%)
-
-Epoch 23
-Train: 100% Loss=0.0667 Batch_id=97 Accuracy=97.18
-Test set: Average loss: 0.2417, Accuracy: 9265/10000 (92.65%)
-
-Epoch 24
-Train: 100% Loss=0.0868 Batch_id=97 Accuracy=97.60
-Test set: Average loss: 0.2367, Accuracy: 9282/10000 (92.82%)
+Train: 100% Loss=0.0440 Batch_id=97 Accuracy=98.76
+Test set: Average loss: 0.3454, Accuracy: 9141/10000 (91.41%)
 ```
