@@ -32,6 +32,16 @@ NUM_EPOCHS = 24
 DROPOUT_PERCENTAGE = 0.05
 LAYER_NORM = "bn"  # Batch Normalization
 
+# OPTIMIZER & SCHEDULER
+
+LRFINDER_END_LR = 1
+LRFINDER_NUM_ITERATIONS = 100
+LRFINDER_STEP_MODE = "exp"
+
+OCLR_DIV_FACTOR = 100
+OCLR_FINAL_DIV_FACTOR = 100
+OCLR_THREE_PHASE = False
+OCLR_ANNEAL_STRATEGY = "linear"
 
 # Compute Related
 
@@ -41,6 +51,7 @@ PRECISION = 32
 # Store
 
 TRAINING_STAT_STORE = "Store/training_stats.csv"
+MODEL_SAVE_PATH = "Store/model.pth"
 
 # Visualization
 

@@ -227,16 +227,13 @@ class Net(pl.LightningModule):
         lr_finder = LRFinder(self, optimizer, criterion=self.criterion)
         lr_finder.range_test(
             self.trainer.datamodule.train_dataloader(),
-            end_lr=0.1,
-            num_iter=30,
-            step_mode="exp",
+            end_lr=config.LRFINDER_END_LR,
+            num_iter=config.LRFINDER_NUM_ITERATIONS,
+            step_mode=config.LRFINDER_STEP_MODE,
         )
 
-        lrfinder_output = lr_finder.plot()
-        try:
-            _, best_lr = lrfinder_output  # to inspect the loss-learning rate graph
-        except:
-            print(lrfinder_output)
+        _, best_lr = lr_finder.plot()  # to inspect the loss-learning rate graph
+
         lr_finder.reset()  # to reset the model and optimizer to their initial state
 
         print("LRFinder Best LR: ", best_lr)
@@ -252,10 +249,10 @@ class Net(pl.LightningModule):
             steps_per_epoch=len(self.trainer.datamodule.train_dataloader()),
             epochs=config.NUM_EPOCHS,
             pct_start=5 / config.NUM_EPOCHS,
-            div_factor=100,
-            three_phase=False,
-            final_div_factor=100,
-            anneal_strategy="linear",
+            div_factor=config.OCLR_DIV_FACTOR,
+            three_phase=config.OCLR_THREE_PHASE,
+            final_div_factor=config.OCLR_FINAL_DIV_FACTOR,
+            anneal_strategy=config.OCLR_ANNEAL_STRATEGY,
         )
         return [optimizer], [
             {"scheduler": scheduler, "interval": "step", "frequency": 1}
