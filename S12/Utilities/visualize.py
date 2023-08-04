@@ -47,12 +47,6 @@ def plot_data_samples(data_loader, classes):
 
 
 def plot_model_training_curves(train_accs, test_accs, train_losses, test_losses):
-    # train_accs, test_accs, train_losses, test_losses = (
-    #     train_accs.cpu().detach().numpy(),
-    #     test_accs.cpu().detach().numpy(),
-    #     train_losses.cpu().detach().numpy(),
-    #     test_losses.cpu().detach().numpy(),
-    # )
     fig, axs = plt.subplots(2, 2, figsize=(15, 10))
     axs[0, 0].plot(train_losses)
     axs[0, 0].set_title("Training Loss")
@@ -63,29 +57,6 @@ def plot_model_training_curves(train_accs, test_accs, train_losses, test_losses)
     axs[1, 1].plot(test_accs)
     axs[1, 1].set_title("Test Accuracy")
     plt.plot()
-
-
-def plot_confusion_matrix(labels, preds, classes=range(10), normalize=True):
-    confmat = ConfusionMatrix(task="multiclass", num_classes=10)
-    confmat = confmat(preds, labels).numpy()
-    if normalize:
-        df_confmat = pd.DataFrame(
-            confmat / np.sum(confmat, axis=1)[:, None],
-            index=[i for i in classes],
-            columns=[i for i in classes],
-        )
-    else:
-        df_confmat = pd.DataFrame(
-            confmat,
-            index=[i for i in classes],
-            columns=[i for i in classes],
-        )
-    plt.figure(figsize=(7, 5))
-    sn.heatmap(df_confmat, annot=True, cmap="Blues", fmt=".3f", linewidths=0.5)
-    plt.tight_layout()
-    plt.ylabel("True label")
-    plt.xlabel("Predicted label")
-    plt.show()
 
 
 def plot_incorrect_preds(incorrect, classes, num_imgs):
