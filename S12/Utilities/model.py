@@ -57,6 +57,14 @@ class Net(pl.LightningModule):
             "test_labels": torch.tensor([]),
             "test_incorrect": [],
         }
+        self.log_store = {
+            "train_loss_epoch": [],
+            "train_acc_epoch": [],
+            "val_loss_epoch": [],
+            "val_acc_epoch": [],
+            "test_loss_epoch": [],
+            "test_acc_epoch": [],
+        }
 
         # This defines the structure of the NN.
         # Prep Layer
@@ -128,7 +136,7 @@ class Net(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         data, target = batch
 
-        print("curr lr: ", self.optimizers().param_groups[0]["lr"])
+        # print("curr lr: ", self.optimizers().param_groups[0]["lr"])
 
         # forward pass
         pred = self(data)
