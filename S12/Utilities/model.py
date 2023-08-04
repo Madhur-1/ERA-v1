@@ -231,12 +231,14 @@ class Net(pl.LightningModule):
             num_iter=config.LRFINDER_NUM_ITERATIONS,
             step_mode=config.LRFINDER_STEP_MODE,
         )
-
-        _, best_lr = lr_finder.plot()  # to inspect the loss-learning rate graph
-
+        best_lr = None
+        try:
+            _, best_lr = lr_finder.plot()  # to inspect the loss-learning rate graph
+        except Exception as e:
+            pass
         lr_finder.reset()  # to reset the model and optimizer to their initial state
 
-        print("LRFinder Best LR: ", best_lr)
+
         return best_lr
 
     def configure_optimizers(self):
@@ -244,7 +246,7 @@ class Net(pl.LightningModule):
         best_lr = self.find_bestLR_LRFinder(optimizer)
         scheduler = OneCycleLR(
             optimizer,
-            max_lr=best_lr,
+            max_lr=1.47E-03,
             # total_steps=self.trainer.estimated_stepping_batches,
             steps_per_epoch=len(self.trainer.datamodule.train_dataloader()),
             epochs=config.NUM_EPOCHS,

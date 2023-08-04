@@ -10,7 +10,7 @@ class TrainingEndCallback(Callback):
         print("Training, validation, and testing completed!")
 
         logged_metrics = pl_module.log_store
-        print(logged_metrics)
+
         plot_model_training_curves(
             train_accs=logged_metrics["train_acc_epoch"],
             test_accs=logged_metrics["val_acc_epoch"],
@@ -47,7 +47,7 @@ class PrintLearningMetricsCallback(Callback):
         pl_module.log_store.get("val_acc_epoch").append(
             trainer.logged_metrics["val_acc_epoch"].cpu().detach().item()
         )
-        print(pl_module.log_store)
+
 
     def on_test_epoch_end(
         self, trainer: pl.Trainer, pl_module: pl.LightningModule
