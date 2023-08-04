@@ -47,12 +47,12 @@ def plot_data_samples(data_loader, classes):
 
 
 def plot_model_training_curves(train_accs, test_accs, train_losses, test_losses):
-    train_accs, test_accs, train_losses, test_losses = (
-        train_accs.cpu().detach().numpy(),
-        test_accs.cpu().detach().numpy(),
-        train_losses.cpu().detach().numpy(),
-        test_losses.cpu().detach().numpy(),
-    )
+    # train_accs, test_accs, train_losses, test_losses = (
+    #     train_accs.cpu().detach().numpy(),
+    #     test_accs.cpu().detach().numpy(),
+    #     train_losses.cpu().detach().numpy(),
+    #     test_losses.cpu().detach().numpy(),
+    # )
     fig, axs = plt.subplots(2, 2, figsize=(15, 10))
     axs[0, 0].plot(train_losses)
     axs[0, 0].set_title("Training Loss")
