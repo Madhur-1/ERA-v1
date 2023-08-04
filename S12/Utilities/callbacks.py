@@ -10,7 +10,7 @@ class TrainingEndCallback(Callback):
         print("Training, validation, and testing completed!")
 
         logged_metrics = trainer.logged_metrics
-
+        print(logged_metrics)
         plot_model_training_curves(
             train_accs=logged_metrics["train_acc_epoch"],
             test_accs=logged_metrics["val_acc_epoch"],

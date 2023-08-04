@@ -228,13 +228,11 @@ class Net(pl.LightningModule):
         return best_lr
 
     def configure_optimizers(self):
-        optimizer = optim.Adam(
-            self.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay
-        )
-        best_lr = self.find_bestLR_LRFinder(optimizer)
+        optimizer = self.get_only_optimizer()
+        # best_lr = self.find_bestLR_LRFinder(optimizer)
         scheduler = OneCycleLR(
             optimizer,
-            max_lr=best_lr,
+            max_lr=self.learning_rate,
             total_steps=self.trainer.estimated_stepping_batches,
             pct_start=5 / config.NUM_EPOCHS,
             div_factor=100,
@@ -245,6 +243,12 @@ class Net(pl.LightningModule):
         return [optimizer], [
             {"scheduler": scheduler, "interval": "step", "frequency": 1}
         ]
+
+    def get_only_optimizer(self):
+        optimizer = optim.Adam(
+            self.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay
+        )
+        return optimizer
 
     def on_test_end(self) -> None:
         super().on_test_end()
