@@ -111,7 +111,7 @@ class Net(pl.LightningModule):
         self.maxpool = nn.MaxPool2d(4, 4)
 
         # Classifier
-        self.lr = nn.Linear(512, 10)
+        self.linear = nn.Linear(512, 10)
 
     def forward(self, x):
         x = self.prep_layer(x)
@@ -122,11 +122,13 @@ class Net(pl.LightningModule):
         x = x + self.l3res(x)
         x = self.maxpool(x)
         x = x.view(-1, 512)
-        x = self.lr(x)
+        x = self.linear(x)
         return F.log_softmax(x, dim=1)
 
     def training_step(self, batch, batch_idx):
         data, target = batch
+
+        print("curr lr: ", self.optimizers().param_groups[0]["lr"])
 
         # forward pass
         pred = self(data)
@@ -214,26 +216,33 @@ class Net(pl.LightningModule):
         return loss
 
     def find_bestLR_LRFinder(self, optimizer):
-        lr_finder = LRFinder(
-            self, optimizer, criterion=self.criterion, device=config.ACCELERATOR
-        )
+        lr_finder = LRFinder(self, optimizer, criterion=self.criterion)
         lr_finder.range_test(
             self.trainer.datamodule.train_dataloader(),
-            end_lr=10,
-            num_iter=20,
+            end_lr=0.1,
+            num_iter=30,
             step_mode="exp",
         )
-        _, best_lr = lr_finder.plot()  # to inspect the loss-learning rate graph
+
+        lrfinder_output = lr_finder.plot()
+        try:
+            _, best_lr = lrfinder_output  # to inspect the loss-learning rate graph
+        except:
+            print(lrfinder_output)
         lr_finder.reset()  # to reset the model and optimizer to their initial state
+
+        print("LRFinder Best LR: ", best_lr)
         return best_lr
 
     def configure_optimizers(self):
         optimizer = self.get_only_optimizer()
-        # best_lr = self.find_bestLR_LRFinder(optimizer)
+        best_lr = self.find_bestLR_LRFinder(optimizer)
         scheduler = OneCycleLR(
             optimizer,
-            max_lr=self.learning_rate,
-            total_steps=self.trainer.estimated_stepping_batches,
+            max_lr=best_lr,
+            # total_steps=self.trainer.estimated_stepping_batches,
+            steps_per_epoch=len(self.trainer.datamodule.train_dataloader()),
+            epochs=config.NUM_EPOCHS,
             pct_start=5 / config.NUM_EPOCHS,
             div_factor=100,
             three_phase=False,
