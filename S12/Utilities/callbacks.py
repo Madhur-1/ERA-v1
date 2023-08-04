@@ -28,10 +28,10 @@ class PrintLearningMetricsCallback(Callback):
             f"\nEpoch: {trainer.current_epoch}, Train Loss: {trainer.logged_metrics['train_loss_epoch']}, Train Accuracy: {trainer.logged_metrics['train_acc_epoch']}"
         )
         pl_module.log_store.get("train_loss_epoch").append(
-            trainer.logged_metrics["train_loss_epoch"].cpu().detach()
+            trainer.logged_metrics["train_loss_epoch"].cpu().detach().item()
         )
         pl_module.log_store.get("train_acc_epoch").append(
-            trainer.logged_metrics["train_acc_epoch"].cpu().detach()
+            trainer.logged_metrics["train_acc_epoch"].cpu().detach().item()
         )
 
     def on_validation_epoch_end(
@@ -42,10 +42,10 @@ class PrintLearningMetricsCallback(Callback):
             f"\nEpoch: {trainer.current_epoch}, Val Loss: {trainer.logged_metrics['val_loss_epoch']}, Val Accuracy: {trainer.logged_metrics['val_acc_epoch']}"
         )
         pl_module.log_store.get("val_loss_epoch").append(
-            trainer.logged_metrics["val_loss_epoch"].cpu().detach()
+            trainer.logged_metrics["val_loss_epoch"].cpu().detach().item()
         )
         pl_module.log_store.get("val_acc_epoch").append(
-            trainer.logged_metrics["val_acc_epoch"].cpu().detach()
+            trainer.logged_metrics["val_acc_epoch"].cpu().detach().item()
         )
         print(pl_module.log_store)
 
@@ -57,8 +57,8 @@ class PrintLearningMetricsCallback(Callback):
             f"\nEpoch: {trainer.current_epoch}, Test Loss: {trainer.logged_metrics['test_loss_epoch']}, Test Accuracy: {trainer.logged_metrics['test_acc_epoch']}"
         )
         pl_module.log_store.get("test_loss_epoch").append(
-            trainer.logged_metrics["test_loss_epoch"].cpu().detach()
+            trainer.logged_metrics["test_loss_epoch"].cpu().detach().item()
         )
         pl_module.log_store.get("test_acc_epoch").append(
-            trainer.logged_metrics["test_acc_epoch"].cpu().detach()
+            trainer.logged_metrics["test_acc_epoch"].cpu().detach().item()
         )
