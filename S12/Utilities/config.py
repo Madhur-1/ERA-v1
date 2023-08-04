@@ -35,7 +35,7 @@ LAYER_NORM = "bn"  # Batch Normalization
 
 # Compute Related
 
-ACCELERATOR = "mps"
+ACCELERATOR = "cuda"
 PRECISION = 32
 
 # Store
