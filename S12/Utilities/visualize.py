@@ -1,11 +1,4 @@
-import itertools
-
 import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-import seaborn as sn
-import torch
-from torchmetrics import ConfusionMatrix
 from torchvision import transforms
 
 
