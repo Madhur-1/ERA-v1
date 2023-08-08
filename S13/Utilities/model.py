@@ -121,6 +121,7 @@ class YOLOv3(pl.LightningModule):
 
         self.learning_rate = config.LEARNING_RATE
         self.weight_decay = config.WEIGHT_DECAY
+        self.best_lr = 1e-3
 
     def forward(self, x):
         outputs = []  # for each scale
@@ -215,7 +216,7 @@ class YOLOv3(pl.LightningModule):
         )
         scheduler = OneCycleLR(
             optimizer,
-            max_lr=1e-3,
+            max_lr=self.best_lr,
             steps_per_epoch=len(self.trainer.datamodule.train_dataloader()),
             epochs=config.NUM_EPOCHS,
             pct_start=5 / config.NUM_EPOCHS,
