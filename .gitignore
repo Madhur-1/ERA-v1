@@ -2,6 +2,7 @@ ERAenv/
 data/
 .vscode/
 S12/Gradio App/Store/pred_store.pth
+S13Orig/
 
 */.swp
 

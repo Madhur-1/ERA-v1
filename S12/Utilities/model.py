@@ -238,7 +238,6 @@ class Net(pl.LightningModule):
             pass
         lr_finder.reset()  # to reset the model and optimizer to their initial state
 
-
         return best_lr
 
     def configure_optimizers(self):
@@ -246,7 +245,7 @@ class Net(pl.LightningModule):
         best_lr = self.find_bestLR_LRFinder(optimizer)
         scheduler = OneCycleLR(
             optimizer,
-            max_lr=1.47E-03,
+            max_lr=1.47e-03,
             # total_steps=self.trainer.estimated_stepping_batches,
             steps_per_epoch=len(self.trainer.datamodule.train_dataloader()),
             epochs=config.NUM_EPOCHS,
