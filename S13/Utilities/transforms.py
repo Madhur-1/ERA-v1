@@ -43,6 +43,7 @@ train_transforms = A.Compose(
         label_fields=[],
     ),
 )
+
 test_transforms = A.Compose(
     [
         A.LongestMaxSize(max_size=IMAGE_SIZE),

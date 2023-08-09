@@ -2,11 +2,13 @@ import torch
 
 DATASET = "../data/PASCAL_VOC"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-# DEVICE = "cpu"
+# DEVICE = "mps"
 # seed_everything()  # If you want deterministic behavior
 NUM_WORKERS = 4
-BATCH_SIZE = 32
+BATCH_SIZE = 8
 IMAGE_SIZE = 416
+INPUT_RESOLUTIONS = [416, 544]
+INPUT_RESOLUTIONS_CUM_PROBS = [50, 100]
 NUM_CLASSES = 20
 LEARNING_RATE = 1e-5
 WEIGHT_DECAY = 1e-4
@@ -21,6 +23,9 @@ SAVE_MODEL = True
 CHECKPOINT_PATH = "Store/checkpoints/"
 IMG_DIR = DATASET + "/images/"
 LABEL_DIR = DATASET + "/labels/"
+TRAIN_MOSAIC_PERCENTAGE = 0.67
+TEST_MOSAIC_PERCENTAGE = 0.00
+MODEL_STATE_DICT_PATH = "Store/checkpoints/yolov3.pth"
 
 ANCHORS = [
     [(0.28, 0.22), (0.38, 0.48), (0.9, 0.78)],

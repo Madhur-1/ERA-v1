@@ -453,7 +453,8 @@ def load_checkpoint(checkpoint_file, model, optimizer, lr):
 def plot_couple_examples(model, loader, thresh, iou_thresh, anchors):
     model.eval()
     x, y = next(iter(loader))
-    x = x
+    x = x.to(config.DEVICE)
+
     with torch.no_grad():
         out = model(x)
         bboxes = [[] for _ in range(x.shape[0])]

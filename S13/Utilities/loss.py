@@ -45,6 +45,7 @@ class YoloLoss(pl.LightningModule):
         # ==================== #
 
         anchors = anchors.reshape(1, 3, 1, 1, 2)
+
         box_preds = torch.cat(
             [
                 self.sigmoid(predictions[..., 1:3]),

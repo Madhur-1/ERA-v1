@@ -11,6 +11,7 @@ import pytorch_lightning as pl
 import torch
 from PIL import Image, ImageFile
 from torch.utils.data import DataLoader, Dataset
+from torchvision.transforms import Resize
 
 from . import config, transforms
 from .utils import cells_to_bboxes
@@ -32,6 +33,7 @@ class YOLODataset(Dataset):
         S=[13, 26, 52],
         C=20,
         transform=None,
+        mosaic_percentage=0.67,
     ):
         self.annotations = pd.read_csv(csv_file)
         self.img_dir = img_dir
@@ -47,6 +49,7 @@ class YOLODataset(Dataset):
         self.num_anchors_per_scale = self.num_anchors // 3
         self.C = C
         self.ignore_iou_thresh = 0.5
+        self.mosaic_percentage = mosaic_percentage
 
     def __len__(self):
         return len(self.annotations)
@@ -123,8 +126,20 @@ class YOLODataset(Dataset):
         labels4 = labels4[labels4[:, 3] > 0]
         return img4, labels4
 
+    def load_single_img(self, index):
+        label_path = os.path.join(self.label_dir, self.annotations.iloc[index, 1])
+        bboxes = np.roll(
+            np.loadtxt(fname=label_path, delimiter=" ", ndmin=2), 4, axis=1
+        ).tolist()
+        img_path = os.path.join(self.img_dir, self.annotations.iloc[index, 0])
+        image = np.array(Image.open(img_path).convert("RGB"))
+        return image, bboxes
+
     def __getitem__(self, index):
-        image, bboxes = self.load_mosaic(index)
+        if random.random() < self.mosaic_percentage:
+            image, bboxes = self.load_mosaic(index)
+        else:
+            image, bboxes = self.load_single_img(index)
 
         if self.transform:
             augmentations = self.transform(image=image, bboxes=bboxes)
@@ -169,6 +184,49 @@ class YOLODataset(Dataset):
         return image, tuple(targets)
 
 
+# def dynamic_image_resolution_collate_fn(batch):
+#     images = []
+#     targets = []
+#     for img, target in batch:
+#         images.append(img)
+#         targets.append(target)
+#     images = torch.stack(images, dim=0)
+
+#     config.IMAGE_SIZE = 416 if random.random() < 0.5 else 544
+#     batch_S = [
+#         config.IMAGE_SIZE // 32,
+#         config.IMAGE_SIZE // 16,
+#         config.IMAGE_SIZE // 8,
+#     ]
+
+#     return images, targets, batch_S
+
+
+# class ResizeDataLoader(DataLoader):
+#     def __init__(self, dataset, resolutions=None, cum_weights=None, **kwargs):
+#         super().__init__(dataset, **kwargs)
+#         self.resolutions = resolutions
+#         self.cum_weights = cum_weights
+#         self.resizers = None
+#         if (
+#             (self.resolutions is not None)
+#             and (self.cum_weights is not None)
+#             and len(resolutions) > 1
+#             and len(self.resolutions) == len(self.cum_weights)
+#         ):
+#             self.resizers = [Resize(res, antialias=True) for res in self.resolutions]
+
+#     def __iter__(self):
+#         gen = super(ResizeDataLoader, self).__iter__()
+#         for x, y in gen:
+#             if self.resizers is not None and len(self.resizers) > 1:
+#                 resizer = random.choices(
+#                     self.resizers, cum_weights=self.cum_weights, k=1
+#                 )[0]
+#                 x = resizer(x)
+#             yield x, y
+
+
 class YOLODataModule(pl.LightningDataModule):
     def __init__(self, train_csv_path, test_csv_path):
         super().__init__()
@@ -190,6 +248,7 @@ class YOLODataModule(pl.LightningDataModule):
             img_dir=config.IMG_DIR,
             label_dir=config.LABEL_DIR,
             anchors=config.ANCHORS,
+            mosaic_percentage=config.TRAIN_MOSAIC_PERCENTAGE,
         )
 
         self.eval_dataset = YOLODataset(
@@ -203,6 +262,7 @@ class YOLODataModule(pl.LightningDataModule):
             img_dir=config.IMG_DIR,
             label_dir=config.LABEL_DIR,
             anchors=config.ANCHORS,
+            mosaic_percentage=config.TRAIN_MOSAIC_PERCENTAGE,
         )
 
         self.test_dataset = YOLODataset(
@@ -216,9 +276,20 @@ class YOLODataModule(pl.LightningDataModule):
             img_dir=config.IMG_DIR,
             label_dir=config.LABEL_DIR,
             anchors=config.ANCHORS,
+            mosaic_percentage=config.TEST_MOSAIC_PERCENTAGE,
         )
 
     def train_dataloader(self):
+        # return ResizeDataLoader(
+        #     dataset=self.train_dataset,
+        #     resolutions=config.INPUT_RESOLUTIONS,
+        #     cum_weights=config.INPUT_RESOLUTIONS_CUM_PROBS,
+        #     batch_size=config.BATCH_SIZE,
+        #     shuffle=True,
+        #     num_workers=config.NUM_WORKERS,
+        #     pin_memory=config.PIN_MEMORY,
+        #     drop_last=False,
+        # )
         return DataLoader(
             dataset=self.train_dataset,
             batch_size=config.BATCH_SIZE,

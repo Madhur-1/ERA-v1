@@ -2,6 +2,7 @@
 Implementation of YOLOv3 architecture
 """
 
+import random
 from typing import Any
 
 import pytorch_lightning as pl
@@ -115,9 +116,11 @@ class YOLOv3(pl.LightningModule):
         self.num_classes = num_classes
         self.in_channels = in_channels
         self.layers = self._create_conv_layers()
-        self.scaled_anchors = torch.tensor(config.ANCHORS) * torch.tensor(
-            config.S
-        ).unsqueeze(1).unsqueeze(1).repeat(1, 3, 2)
+
+        self.scaled_anchors = (
+            torch.tensor(config.ANCHORS)
+            * torch.tensor(config.S).unsqueeze(1).unsqueeze(1).repeat(1, 3, 2)
+        ).to(config.DEVICE)
 
         self.learning_rate = config.LEARNING_RATE
         self.weight_decay = config.WEIGHT_DECAY
@@ -193,7 +196,7 @@ class YOLOv3(pl.LightningModule):
         x, y = batch
         y0, y1, y2 = y[0], y[1], y[2]
         out = self(x)
-
+        print(out[0].shape, y0.shape)
         loss = (
             self.yololoss()(out[0], y0, self.scaled_anchors[0])
             + self.yololoss()(out[1], y1, self.scaled_anchors[1])
@@ -203,6 +206,24 @@ class YOLOv3(pl.LightningModule):
         self.log(
             "train_loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True
         )
+
+        # config.IMAGE_SIZE = 416 if random.random() < 0.5 else 544
+        # config.S = [
+        #     config.IMAGE_SIZE // 32,
+        #     config.IMAGE_SIZE // 16,
+        #     config.IMAGE_SIZE // 8,
+        # ]
+        # print(f"{self.trainer.datamodule.train_dataset.S=}")
+        # self.trainer.datamodule.train_dataset.S = [
+        #     config.IMAGE_SIZE // 32,
+        #     config.IMAGE_SIZE // 16,
+        #     config.IMAGE_SIZE // 8,
+        # ]
+        # self.trainer.datamodule.train_dataset.image_size = config.IMAGE_SIZE
+        # self.scaled_anchors = (
+        #     torch.tensor(config.ANCHORS)
+        #     * torch.tensor(config.S).unsqueeze(1).unsqueeze(1).repeat(1, 3, 2)
+        # ).to(config.DEVICE)
         return loss
 
     def on_train_epoch_end(self) -> None:
@@ -229,6 +250,9 @@ class YOLOv3(pl.LightningModule):
         return [optimizer], [
             {"scheduler": scheduler, "interval": "step", "frequency": 1}
         ]
+
+    def on_train_end(self) -> None:
+        torch.save(self.state_dict(), config.MODEL_STATE_DICT_PATH)
 
 
 if __name__ == "__main__":
