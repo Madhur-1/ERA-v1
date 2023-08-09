@@ -4,8 +4,8 @@ DATASET = "../data/PASCAL_VOC"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 # DEVICE = "mps"
 # seed_everything()  # If you want deterministic behavior
-NUM_WORKERS = 4
-BATCH_SIZE = 8
+NUM_WORKERS = 2
+BATCH_SIZE = 16
 IMAGE_SIZE = 416
 INPUT_RESOLUTIONS = [416, 544]
 INPUT_RESOLUTIONS_CUM_PROBS = [50, 100]

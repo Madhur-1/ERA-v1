@@ -196,7 +196,7 @@ class YOLOv3(pl.LightningModule):
         x, y = batch
         y0, y1, y2 = y[0], y[1], y[2]
         out = self(x)
-        print(out[0].shape, y0.shape)
+        # print(out[0].shape, y0.shape)
         loss = (
             self.yololoss()(out[0], y0, self.scaled_anchors[0])
             + self.yololoss()(out[1], y1, self.scaled_anchors[1])
