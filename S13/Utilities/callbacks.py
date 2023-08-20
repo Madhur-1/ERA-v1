@@ -20,7 +20,7 @@ class PlotTestExamplesCallback(pl.Callback):
         if (trainer.current_epoch + 1) % self.every_n_epochs == 0:
             plot_couple_examples(
                 model=pl_module,
-                loader=trainer.datamodule.train_dataloader(),
+                loader=trainer.datamodule.test_dataloader(),
                 thresh=0.6,
                 iou_thresh=0.5,
                 anchors=pl_module.scaled_anchors,

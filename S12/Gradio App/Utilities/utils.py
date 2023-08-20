@@ -17,6 +17,10 @@ def generate_confidences(
     input_img = input_img.unsqueeze(0)
     model.eval()
     log_probs = model(input_img)[0].detach()
+    print("Log Probs Shape: ", log_probs.shape)
+    print(model(input_img))
+    print(model(input_img).shape)
+
     model.train()
     probs = torch.exp(log_probs)
 

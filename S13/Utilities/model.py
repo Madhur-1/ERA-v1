@@ -226,9 +226,30 @@ class YOLOv3(pl.LightningModule):
         # ).to(config.DEVICE)
         return loss
 
+    def test_step(self, batch, batch_idx):
+        x, y = batch
+        y0, y1, y2 = y[0], y[1], y[2]
+        out = self(x)
+        # print(out[0].shape, y0.shape)
+        loss = (
+            self.yololoss()(out[0], y0, self.scaled_anchors[0])
+            + self.yololoss()(out[1], y1, self.scaled_anchors[1])
+            + self.yololoss()(out[2], y2, self.scaled_anchors[2])
+        )
+
+        self.log(
+            "test_loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True
+        )
+        return loss
+
     def on_train_epoch_end(self) -> None:
         print(
             f"EPOCH: {self.current_epoch}, Loss: {self.trainer.callback_metrics['train_loss_epoch']}"
+        )
+
+    def on_test_epoch_end(self) -> None:
+        print(
+            f"EPOCH: {self.current_epoch}, Loss: {self.trainer.callback_metrics['test_loss_epoch']}"
         )
 
     def configure_optimizers(self) -> Any:
@@ -240,7 +261,7 @@ class YOLOv3(pl.LightningModule):
             max_lr=self.best_lr,
             steps_per_epoch=len(self.trainer.datamodule.train_dataloader()),
             epochs=config.NUM_EPOCHS,
-            pct_start=5 / config.NUM_EPOCHS,
+            pct_start=8 / config.NUM_EPOCHS,
             div_factor=100,
             three_phase=False,
             final_div_factor=100,
