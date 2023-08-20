@@ -21,6 +21,16 @@ model.load_state_dict(
     torch.load(config.MODEL_SAVE_PATH, map_location=torch.device("cpu"))
 )
 model.pred_store = torch.load(config.PRED_STORE_PATH, map_location=torch.device("cpu"))
+# model.load_state_dict(
+#     torch.load(
+#         "/Users/madhurjindal/WorkProjects/ERA-v1/S12/Gradio App/Store/model.pth",
+#         map_location=torch.device("cpu"),
+#     )
+# )
+# model.pred_store = torch.load(
+#     "/Users/madhurjindal/WorkProjects/ERA-v1/S12/Gradio App/Store/pred_store.pth",
+#     map_location=torch.device("cpu"),
+# )
 
 
 def generate_gradio_output(
@@ -53,6 +63,8 @@ def generate_gradio_output(
 
     return confidences, visualization, plot
 
+
+# generate_gradio_output(torch.zeros(416, 416, 3).numpy(), 3, True, -1, 0.5, False, 5)
 
 inputs = [
     gr.Image(shape=(32, 32), label="Input Image"),

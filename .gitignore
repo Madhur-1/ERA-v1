@@ -3,6 +3,7 @@ data/
 .vscode/
 S12/Gradio App/Store/pred_store.pth
 S13Orig/
+S13/Gradio App/Store/epoch=39-step=16560.ckpt
 
 */.swp
 
