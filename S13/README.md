@@ -17,202 +17,195 @@ This assignment is focused towards understanding the YOLOv3 and training it from
 
 ## Structure
 
-<img width="464" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/fd82959c-e02a-46ed-bc03-bd89ea858f96">
-
+![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/367fbb1a-c284-4c8a-84f4-629d4a64e025)
 
 
 ### Metrics
-| Train Acc | Test Acc | Train Loss | Test Loss |
-|-----------|----------|------------|-----------|
-| 96.47     | 92.50    | 0.10       | 0.23      |
+| Class Acc | No Obj Acc |   Obj Acc  | MAP       | Train Loss | Test Loss |
+|-----------|------------|------------|-----------|------------|-----------|
+| 88.99     | 98.19      | 77.58      | 0.43      | 3.19       | 2.73      |
 
-
-## Performance Curve
-![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/dc30114c-a912-4d1c-9dd1-7568f008a2a9)
-
-
-
-## Confusion Matrix
-
-![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/99f9bb9d-d907-41f5-b134-a214750b1c4b)
-
-
+Note: The above loss values use lambda_class = 1, lambda_noobj = 5, lambda_obj = 1, lambda_box = 5.
 
 ## Data Exploration
 
-![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/9bc426b3-c3cb-4307-8390-d725b434a22f)
-
+<img width="451" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/865607f0-1640-4adb-aa28-79ef90e833c7">
+<img width="437" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/662c852b-d821-4e44-b809-68b6fc797318">
 
 
 ```python
-import albumentations as A
-from albumentations.pytorch import ToTensorV2
-
-# Train data transformations
-train_transforms = A.Compose(
-    [
-        A.PadIfNeeded(min_height=48, min_width=48, always_apply=True, border_mode=0),
-        A.RandomCrop(height=32, width=32, always_apply=True),
-        A.HorizontalFlip(p=0.5),
-        # A.PadIfNeeded(min_height=64, min_width=64, always_apply=True, border_mode=0),
-        A.CoarseDropout(
-            p=0.2,
-            max_holes=1,
-            max_height=8,
-            max_width=8,
-            min_holes=1,
-            min_height=8,
-            min_width=8,
-            fill_value=(0.4914, 0.4822, 0.4465),
-            mask_fill_value=None,
-        ),
-        # A.CenterCrop(height=32, width=32, always_apply=True),
-        A.Normalize((0.4914, 0.4822, 0.4465), (0.247, 0.243, 0.261)),
-        ToTensorV2(),
-    ]
-)
-
-# Test data transformations
 test_transforms = A.Compose(
     [
-        A.Normalize((0.4914, 0.4822, 0.4465), (0.247, 0.243, 0.261)),
+        A.LongestMaxSize(max_size=IMAGE_SIZE),
+        A.PadIfNeeded(
+            min_height=IMAGE_SIZE, min_width=IMAGE_SIZE, border_mode=cv2.BORDER_CONSTANT
+        ),
+        A.Normalize(
+            mean=[0, 0, 0],
+            std=[1, 1, 1],
+            max_pixel_value=255,
+        ),
         ToTensorV2(),
-    ]
+    ],
 )
-
 ```
-
-As seen above, three transforms from the Albumentations library RandomCrop, HoriznotalFlip and CourseDropout were used.
 
 ## LR Finder
 
-![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/9d5d49d6-83d6-4add-84d2-4b20cb9fdc3e)
+<img width="568" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/a0d432c6-363c-4a4e-b383-61668fe1d322">
+
 
 
 `LR suggestion: steepest gradient
-Suggested LR: 2.56E-03`
+Suggested LR: 0.003981071705534973`
 
-From the above figure we can see that the optimal lr is found using the steepest gradient at the 2.00E-03 point. Please note the setting for the lr_finder was the following:
+From the above figure we can see that the optimal lr is found using the steepest gradient at the 0.003981071705534973 point. Please note the setting for the lr_finder was the following:
 
-```python
-from torch_lr_finder import LRFinder
-model = Net(dropout_percentage=0.02, norm="bn").to(device)
-optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-4)
-criterion = F.cross_entropy
-
-lr_finder = LRFinder(model, optimizer, criterion, device="cuda")
-lr_finder.range_test(train_loader, end_lr=10, num_iter=200, step_mode="exp")
-lr_finder.plot() # to inspect the loss-learning rate graph
-lr_finder.reset() # to reset the model and optimizer to their initial state
-```
-
-## Misclassified Images
-
-Total Incorrect Preds = 750
-
-![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/69211262-15a7-4d2a-806c-a9c7b3c76264)
-
-
-
-
-We see that the misclassified images in all three models have classes very close to each other as misclassified. These misclassified images would be hard for a human to classify correctly too!
 
 ## Training Log
 
 ```
-Epoch: 0, Val Loss: 1.477613925933838, Val Accuracy: 0.46369999647140503
+EPOCH: 0, Loss: 13.572253227233887
+EPOCH: 1, Loss: 9.932060241699219
+EPOCH: 2, Loss: 8.969964027404785
 
-Epoch: 0, Train Loss: 1.8622440099716187, Train Accuracy: 0.32736000418663025
-Validation: 0it [00:00, ?it/s]
-Epoch: 1, Val Loss: 1.0305286645889282, Val Accuracy: 0.6324999928474426
+Class accuracy is: 44.560822%
+No obj accuracy is: 93.487915%
+Obj accuracy is: 58.498199%
+EPOCH: 3, Loss: 8.279768943786621
+```
+<img width="437" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/eca87c33-6386-47ac-9aec-45061da93faa">
 
-Epoch: 1, Train Loss: 1.2540448904037476, Train Accuracy: 0.5509399771690369
-Validation: 0it [00:00, ?it/s]
-Epoch: 2, Val Loss: 0.905449390411377, Val Accuracy: 0.6851999759674072
+```
+EPOCH: 4, Loss: 7.834333419799805
+EPOCH: 5, Loss: 7.4485907554626465
+EPOCH: 6, Loss: 7.1627092361450195
 
-Epoch: 2, Train Loss: 0.9339127540588379, Train Accuracy: 0.6700199842453003
-Validation: 0it [00:00, ?it/s]
-Epoch: 3, Val Loss: 0.799048900604248, Val Accuracy: 0.7333999872207642
+Class accuracy is: 48.725201%
+No obj accuracy is: 96.308342%
+Obj accuracy is: 61.208828%
 
-Epoch: 3, Train Loss: 0.7537699341773987, Train Accuracy: 0.7354999780654907
-Validation: 0it [00:00, ?it/s]
-Epoch: 4, Val Loss: 0.6794794201850891, Val Accuracy: 0.7656999826431274
++++ TEST ACCURACIES
+Class accuracy is: 57.960655%
+No obj accuracy is: 97.526146%
+Obj accuracy is: 52.067055%
 
-Epoch: 4, Train Loss: 0.6541508436203003, Train Accuracy: 0.7729399800300598
-Validation: 0it [00:00, ?it/s]
-Epoch: 5, Val Loss: 0.6306113004684448, Val Accuracy: 0.7867000102996826
+EPOCH: 7, Loss: 7.011684417724609
+EPOCH: 8, Loss: 6.7238287925720215
+```
 
-Epoch: 5, Train Loss: 0.5723051428794861, Train Accuracy: 0.8019199967384338
-Validation: 0it [00:00, ?it/s]
-Epoch: 6, Val Loss: 0.5900896191596985, Val Accuracy: 0.7961000204086304
+<img width="444" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/fed8a3cf-0c99-46d0-be10-3e0ed754b154">
 
-Epoch: 6, Train Loss: 0.5007141828536987, Train Accuracy: 0.8266400098800659
-Validation: 0it [00:00, ?it/s]
-Epoch: 7, Val Loss: 0.471587210893631, Val Accuracy: 0.8413000106811523
+```
+EPOCH: 9, Loss: 6.542272090911865
+EPOCH: 10, Loss: 6.382115364074707
 
-Epoch: 7, Train Loss: 0.4469413161277771, Train Accuracy: 0.8455600142478943
-Validation: 0it [00:00, ?it/s]
-Epoch: 8, Val Loss: 0.5326340198516846, Val Accuracy: 0.8228999972343445
++++ TEST ACCURACIES
+Class accuracy is: 63.951229%
+No obj accuracy is: 96.849358%
+Obj accuracy is: 66.733170%
+EPOCH: 11, Loss: 6.283266067504883
+EPOCH: 12, Loss: 6.148199081420898
+EPOCH: 13, Loss: 6.106574058532715
+```
 
-Epoch: 8, Train Loss: 0.39900901913642883, Train Accuracy: 0.8606799840927124
-Validation: 0it [00:00, ?it/s]
-Epoch: 9, Val Loss: 0.40668997168540955, Val Accuracy: 0.8654000163078308
+<img width="442" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/962b03f2-5b11-497a-85f5-909498e24a58">
 
-Epoch: 9, Train Loss: 0.3671680986881256, Train Accuracy: 0.8739399909973145
-Validation: 0it [00:00, ?it/s]
-Epoch: 10, Val Loss: 0.3456963002681732, Val Accuracy: 0.8837000131607056
+```
+EPOCH: 14, Loss: 6.001038074493408
++++ TRAIN ACCURACIES
+Class accuracy is: 56.644726%
+No obj accuracy is: 96.247818%
+Obj accuracy is: 69.856743%
++++ TEST ACCURACIES
+Class accuracy is: 67.403717%
+No obj accuracy is: 97.583992%
+Obj accuracy is: 63.067329%
+EPOCH: 15, Loss: 5.91851806640625
+EPOCH: 16, Loss: 5.802373886108398
+EPOCH: 17, Loss: 5.707857608795166
+EPOCH: 18, Loss: 5.567074775695801
+```
 
-Epoch: 10, Train Loss: 0.3388667702674866, Train Accuracy: 0.8831999897956848
-Validation: 0it [00:00, ?it/s]
-Epoch: 11, Val Loss: 0.35601386427879333, Val Accuracy: 0.8769999742507935
+<img width="434" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/2a234a92-3f0f-41d6-afd0-a4d973a1ef4a">
 
-Epoch: 11, Train Loss: 0.30515751242637634, Train Accuracy: 0.89274001121521
-Validation: 0it [00:00, ?it/s]
-Epoch: 12, Val Loss: 0.31688356399536133, Val Accuracy: 0.8914999961853027
+```
++++ TEST ACCURACIES
+Class accuracy is: 66.566917%
+No obj accuracy is: 98.052994%
+Obj accuracy is: 60.052647%
+EPOCH: 19, Loss: 5.447572708129883
+EPOCH: 20, Loss: 5.322601795196533
+EPOCH: 21, Loss: 5.195068836212158
+EPOCH: 22, Loss: 5.106668949127197
++++ TRAIN ACCURACIES
+Class accuracy is: 67.076813%
+No obj accuracy is: 95.820015%
+Obj accuracy is: 77.327820%
++++ TEST ACCURACIES
+Class accuracy is: 76.968689%
+No obj accuracy is: 97.055359%
+Obj accuracy is: 74.319756%
+EPOCH: 23, Loss: 4.980020999908447
+```
 
-Epoch: 12, Train Loss: 0.28730571269989014, Train Accuracy: 0.8989400267601013
-Validation: 0it [00:00, ?it/s]
-Epoch: 13, Val Loss: 0.3391858637332916, Val Accuracy: 0.8871999979019165
+<img width="442" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/f9169ae8-9ed7-45e0-9d9e-44787b489fde">
 
-Epoch: 13, Train Loss: 0.26656946539878845, Train Accuracy: 0.9071800112724304
-Validation: 0it [00:00, ?it/s]
-Epoch: 14, Val Loss: 0.3330417573451996, Val Accuracy: 0.8906999826431274
+```
+EPOCH: 24, Loss: 4.837049961090088
+EPOCH: 25, Loss: 4.764085292816162
+EPOCH: 26, Loss: 4.589331150054932
++++ TEST ACCURACIES
+Class accuracy is: 79.495705%
+No obj accuracy is: 97.869995%
+Obj accuracy is: 72.579666%
+EPOCH: 27, Loss: 4.507960796356201
+EPOCH: 28, Loss: 4.408302307128906
+```
 
-Epoch: 14, Train Loss: 0.25152936577796936, Train Accuracy: 0.9127799868583679
-Validation: 0it [00:00, ?it/s]
-Epoch: 15, Val Loss: 0.2939375936985016, Val Accuracy: 0.9016000032424927
+<img width="435" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/9b19b8c3-f1c9-4e4f-acd6-6cee7cbc603c">
 
-Epoch: 15, Train Loss: 0.22532588243484497, Train Accuracy: 0.9213200211524963
-Validation: 0it [00:00, ?it/s]
-Epoch: 16, Val Loss: 0.29781222343444824, Val Accuracy: 0.9031000137329102
+```
+EPOCH: 29, Loss: 4.3071184158325195
+EPOCH: 30, Loss: 4.165201187133789
++++ TRAIN ACCURACIES
+Class accuracy is: 76.161743%
+No obj accuracy is: 96.402809%
+Obj accuracy is: 81.299088%
++++ TEST ACCURACIES
+Class accuracy is: 84.477692%
+No obj accuracy is: 97.785561%
+Obj accuracy is: 76.201164%
+EPOCH: 31, Loss: 4.073633670806885
+EPOCH: 32, Loss: 3.936971664428711
+EPOCH: 33, Loss: 3.8076586723327637
+```
 
-Epoch: 16, Train Loss: 0.2067444771528244, Train Accuracy: 0.9279400110244751
-Validation: 0it [00:00, ?it/s]
-Epoch: 17, Val Loss: 0.3049575090408325, Val Accuracy: 0.9053999781608582
+<img width="440" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/e20eaeac-db83-4ea0-b02f-452ac564b9a2">
 
-Epoch: 17, Train Loss: 0.19144289195537567, Train Accuracy: 0.9330800175666809
-Validation: 0it [00:00, ?it/s]
-Epoch: 18, Val Loss: 0.2997421622276306, Val Accuracy: 0.9049000144004822
+```
+EPOCH: 34, Loss: 3.6981098651885986
++++ TEST ACCURACIES
+Class accuracy is: 86.320312%
+No obj accuracy is: 97.800079%
+Obj accuracy is: 77.802719%
+EPOCH: 35, Loss: 3.5974011421203613
+EPOCH: 36, Loss: 3.4911625385284424
+EPOCH: 37, Loss: 3.3553738594055176
+EPOCH: 38, Loss: 3.260648250579834
+```
 
-Epoch: 18, Train Loss: 0.17048843204975128, Train Accuracy: 0.9408599734306335
-Validation: 0it [00:00, ?it/s]
-Epoch: 19, Val Loss: 0.2569156587123871, Val Accuracy: 0.9153000116348267
+<img width="436" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/09a0b520-a69b-410d-a5a8-5670cc5611d9">
 
-Epoch: 19, Train Loss: 0.1569124311208725, Train Accuracy: 0.9463599920272827
-Validation: 0it [00:00, ?it/s]
-Epoch: 20, Val Loss: 0.25585222244262695, Val Accuracy: 0.9172000288963318
-
-Epoch: 20, Train Loss: 0.13740618526935577, Train Accuracy: 0.9524999856948853
-Validation: 0it [00:00, ?it/s]
-Epoch: 21, Val Loss: 0.2459949254989624, Val Accuracy: 0.9215999841690063
-
-Epoch: 21, Train Loss: 0.12286654114723206, Train Accuracy: 0.9581800103187561
-Validation: 0it [00:00, ?it/s]
-Epoch: 22, Val Loss: 0.24200274050235748, Val Accuracy: 0.923799991607666
-
-Epoch: 22, Train Loss: 0.11110514402389526, Train Accuracy: 0.9627400040626526
-Validation: 0it [00:00, ?it/s]
-Epoch: 23, Val Loss: 0.23540237545967102, Val Accuracy: 0.925000011920929
-
-Epoch: 23, Train Loss: 0.10367754846811295, Train Accuracy: 0.964739978313446
+```
++++ TRAIN ACCURACIES
+Class accuracy is: 83.479492%
+No obj accuracy is: 96.957603%
+Obj accuracy is: 82.855469%
++++ TEST ACCURACIES
+Class accuracy is: 88.994179%
+No obj accuracy is: 98.185600%
+Obj accuracy is: 77.581047%
++++ MAP:  0.4297582507133484
+EPOCH: 39, Loss: 3.1944639682769775
 ```
