@@ -39,4 +39,55 @@ Visit the "Examples" tab to embark on a visual journey. Explore pre-loaded image
 
 Ready to unveil the mysteries of object detection and GradCAM? Launch the YOLOv3 Object Detection Explorer and unravel the captivating world of computer vision today!
 
+>Please refer to the training repo - https://github.com/Madhur-1/ERA-v1/edit/master/S13 for more details on the training.
+
+## Model Structure
+
+![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/367fbb1a-c284-4c8a-84f4-629d4a64e025)
+
+## PASCAL VOC Dataset
+The Pascal VOC (Visual Object Classes) dataset is a widely used benchmark in computer vision. It consists of 20 classes covering a wide range of objects commonly found in everyday scenes. The dataset is a valuable resource for training and evaluating object detection models like YOLOv3.
+
+#### Classes in the Pascal VOC Dataset
+1. Aeroplane
+2. Bicycle
+3. Bird
+4. Boat
+5. Bottle
+6. Bus
+7. Car
+8. Cat
+9. Chair
+10. Cow
+11. Dining Table
+12. Dog
+13. Horse
+14. Motorbike
+15. Person
+16. Potted Plant
+17. Sheep
+18. Sofa
+19. Train
+20. TV/Monitor
+
+![Alt text](Store/image.png)
+
+## Data Exploration
+
+<img width="451" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/865607f0-1640-4adb-aa28-79ef90e833c7">
+<img width="437" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/662c852b-d821-4e44-b809-68b6fc797318">
+
+## Model Metrics
+| Class Acc | No Obj Acc |   Obj Acc  | MAP       | Train Loss | Test Loss |
+|-----------|------------|------------|-----------|------------|-----------|
+| 88.99     | 98.19      | 77.58      | 0.43      | 3.19       | 2.73      |
+
+Note: The above loss values use lambda_class = 1, lambda_noobj = 5, lambda_obj = 1, lambda_box = 5.
+
+## Grad-CAM
+Note: The following has been taken from https://towardsdatascience.com/understand-your-algorithm-with-grad-cam-d3b62fce353
+
+Gradient-weighted Class Activation Mapping (Grad-CAM), uses the gradients of any target concept (say ‘dog’ in a classification network or a sequence of words in captioning network) flowing into the final convolutional layer to produce a coarse localization map highlighting the important regions in the image for predicting the concept.
+
+![Alt text](Store/image-2.png)
 ---
