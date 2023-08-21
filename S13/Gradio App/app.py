@@ -1,5 +1,6 @@
 import gradio as gr
 import torch
+
 from Utilities import config
 from Utilities.gradio_utils import generate_gradcam_output, plot_bboxes
 from Utilities.model import YOLOv3
@@ -21,7 +22,6 @@ examples = [
     [config.EXAMPLE_IMG_PATH + "bird.webp", 2],
     [config.EXAMPLE_IMG_PATH + "000022.jpg", 2],
     [config.EXAMPLE_IMG_PATH + "airplane.png", 0],
-    [config.EXAMPLE_IMG_PATH + "00001.jpeg", 2],
     [config.EXAMPLE_IMG_PATH + "shipp.jpg", 0],
     [config.EXAMPLE_IMG_PATH + "car.jpg", 1],
     [config.EXAMPLE_IMG_PATH + "000007.jpg", 1],
