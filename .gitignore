@@ -4,6 +4,7 @@ data/
 S12/Gradio App/Store/pred_store.pth
 S13Orig/
 S13/Gradio App/Store/epoch=39-step=16560.ckpt
+S15/Store/weights/epoch=9-step=18190.ckpt
 
 */.swp
 
