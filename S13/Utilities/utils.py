@@ -465,7 +465,7 @@ def plot_couple_examples(model, loader, thresh, iou_thresh, anchors):
             for idx, (box) in enumerate(boxes_scale_i):
                 bboxes[idx] += box
 
-        model.train()
+    model.train()
 
     for i in range(batch_size // 4):
         nms_boxes = non_max_suppression(
