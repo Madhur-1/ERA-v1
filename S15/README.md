@@ -1,211 +1,132 @@
-# Session 13
+# Session 15
 
 ## Introduction
 
-This assignment is focused towards understanding the YOLOv3 and training it from strach while also using pytorch lightning and implementing grad-cam.
+This assignment focuses on understanding the transformer code by converting the translation transformer (encoder + decoder) from vanilla pytorch to pytorch lightning.
 
 ### Target
 1. Port training code to Pytorch Lightning
-2. Achieve:
-   1. Class Acc >= 80
-   2. No Obj Acc >= 98
-   3. Object Acc >= 78
-3. Use Gradio to create a simple app visualizing the bounding box output and GradCAM.
-4. Host the app using HuggingFace Spaces.
-
-**Link to HuggingFace Space:** `https://huggingface.co/spaces/madhurjindal/object-detection-yolov3-gradcam`
-
-## Structure
-
-![image](https://github.com/Madhur-1/ERA-v1/assets/64495917/367fbb1a-c284-4c8a-84f4-629d4a64e025)
-
+2. Achieve Loss < 4
 
 ### Metrics
-| Class Acc | No Obj Acc |   Obj Acc  | MAP       | Train Loss | Test Loss |
-|-----------|------------|------------|-----------|------------|-----------|
-| 88.99     | 98.19      | 77.58      | 0.43      | 3.19       | 2.73      |
-
-Note: The above loss values use lambda_class = 1, lambda_noobj = 5, lambda_obj = 1, lambda_box = 5.
+Final Train Loss: 3.392
+Model trained for 11 epochs
 
 ## Data Exploration
 
-<img width="451" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/865607f0-1640-4adb-aa28-79ef90e833c7">
-<img width="437" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/662c852b-d821-4e44-b809-68b6fc797318">
+The dataset is the Opus Books dataset, involving translation from English to Italian.
 
+```
+SOURCE: CHAPTER XX — ARE FORTRESSES, AND MANY OTHER THINGS TO WHICH PRINCES OFTEN RESORT, ADVANTAGEOUS OR HURTFUL?
+TARGET: Cap.20 An arces et multa alia quae cotidie a principibus fiunt utilia an inutilia sint. [Se le fortezze e molte altre cose, che ogni giorno si fanno da’ principi, sono utili o no]
 
-```python
-test_transforms = A.Compose(
-    [
-        A.LongestMaxSize(max_size=IMAGE_SIZE),
-        A.PadIfNeeded(
-            min_height=IMAGE_SIZE, min_width=IMAGE_SIZE, border_mode=cv2.BORDER_CONSTANT
-        ),
-        A.Normalize(
-            mean=[0, 0, 0],
-            std=[1, 1, 1],
-            max_pixel_value=255,
-        ),
-        ToTensorV2(),
-    ],
-)
+SOURCE: We had a boat at our stern just before the storm, but she was first staved by dashing against the ship’s rudder, and in the next place she broke away, and either sunk or was driven off to sea; so there was no hope from her.
+TARGET: Prima della burrasca avevamo a poppa una scialuppa, ma sfondatasi contro al timone e infrantesi
+
+SOURCE: 'Oh no, Masha, Mr. Levin only says he can't believe...' said Kitty, blushing for Levin, and Levin understanding this became still more irritated and wished to answer, but Vronsky, with his bright and frank smile, came at once to the rescue of the conversation, which was threatening to become unpleasant.
+TARGET: — Ma no, Maša, Konstantin Dmitric dice che non ci può credere — disse Kitty, arrossendo per Levin, e questi lo capì e, irritatosi ancor più, voleva rispondere; ma Vronskij col suo sorriso aperto, cordiale, venne subito in aiuto della conversazione che minacciava di farsi spiacevole.
+
+SOURCE: And if it be urged that whoever is armed will act in the same way, whether mercenary or not, I reply that when arms have to be resorted to, either by a prince or a republic, then the prince ought to go in person and perform the duty of a captain; the republic has to send its citizens, and when one is sent who does not turn out satisfactorily, it ought to recall him, and when one is worthy, to hold him by the laws so that he does not leave the command.
+TARGET: E se si responde che qualunque arà le arme in mano farà questo, o mercennario o no, replicherei come l’arme hanno ad essere operate o da uno principe o da una repubblica. El principe debbe andare in persona, e fare lui l'offizio del capitano; la repubblica ha a mandare sua cittadini; e quando ne manda uno che non riesca valente uomo, debbe cambiarlo; e quando sia, tenerlo con le leggi che non passi el segno.
 ```
 
-## LR Finder
+## Learning Curves
 
-<img width="568" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/a0d432c6-363c-4a4e-b383-61668fe1d322">
+<img width="417" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/fde97cad-0945-4c27-b0a8-6fd4cd6093fa">
 
-
-
-`LR suggestion: steepest gradient
-Suggested LR: 0.003981071705534973`
-
-From the above figure we can see that the optimal lr is found using the steepest gradient at the 0.003981071705534973 point. Please note the setting for the lr_finder was the following:
+<img width="411" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/e34865ad-80f1-44cb-be85-cd8253fa099e">
 
 
 ## Training Log
 
 ```
-EPOCH: 0, Loss: 13.572253227233887
-EPOCH: 1, Loss: 9.932060241699219
-EPOCH: 2, Loss: 8.969964027404785
+EPOCH:0
+--------------------------------------------------------------------------------
+SOURCE: CHAPTER XX — ARE FORTRESSES, AND MANY OTHER THINGS TO WHICH PRINCES OFTEN RESORT, ADVANTAGEOUS OR HURTFUL?
+TARGET: Cap.20 An arces et multa alia quae cotidie a principibus fiunt utilia an inutilia sint. [Se le fortezze e molte altre cose, che ogni giorno si fanno da’ principi, sono utili o no]
+PREDICTED: Dopo il mio , e , , e , , e , , , .
+--------------------------------------------------------------------------------
+SOURCE: We had a boat at our stern just before the storm, but she was first staved by dashing against the ship’s rudder, and in the next place she broke away, and either sunk or was driven off to sea; so there was no hope from her.
+TARGET: Prima della burrasca avevamo a poppa una scialuppa, ma sfondatasi contro al timone e infrantesi le corde che la teneano, andò a sommergersi o il mare la trascinò lontano da noi.
+PREDICTED: il mio giorno , ma il mio giorno , ma non si , e non si , e , e non si a , e non si a , e non si .
+--------------------------------------------------------------------------------
+SOURCE: 'Oh no, Masha, Mr. Levin only says he can't believe...' said Kitty, blushing for Levin, and Levin understanding this became still more irritated and wished to answer, but Vronsky, with his bright and frank smile, came at once to the rescue of the conversation, which was threatening to become unpleasant.
+TARGET: — Ma no, Maša, Konstantin Dmitric dice che non ci può credere — disse Kitty, arrossendo per Levin, e questi lo capì e, irritatosi ancor più, voleva rispondere; ma Vronskij col suo sorriso aperto, cordiale, venne subito in aiuto della conversazione che minacciava di farsi spiacevole.
+PREDICTED: — No , non è nulla — disse Levin , ma Levin , ma Levin , e Levin , e Levin , e Levin , e Levin , e Levin , e Levin , e Levin , e Levin si mise a Levin .
+--------------------------------------------------------------------------------
+SOURCE: And if it be urged that whoever is armed will act in the same way, whether mercenary or not, I reply that when arms have to be resorted to, either by a prince or a republic, then the prince ought to go in person and perform the duty of a captain; the republic has to send its citizens, and when one is sent who does not turn out satisfactorily, it ought to recall him, and when one is worthy, to hold him by the laws so that he does not leave the command.
+TARGET: E se si responde che qualunque arà le arme in mano farà questo, o mercennario o no, replicherei come l’arme hanno ad essere operate o da uno principe o da una repubblica. El principe debbe andare in persona, e fare lui l'offizio del capitano; la repubblica ha a mandare sua cittadini; e quando ne manda uno che non riesca valente uomo, debbe cambiarlo; e quando sia, tenerlo con le leggi che non passi el segno.
+PREDICTED: E che non è che , e ' uomini , non è vero , e non è vero , e non è vero , e non si , e non si , e non si , e non si , e ' uomini , e ' uomini , e non si , e non si , e non si , e ' uomini , e non si , e non si , e non si , e ' uomini , e non si , e non si .
 
-Class accuracy is: 44.560822%
-No obj accuracy is: 93.487915%
-Obj accuracy is: 58.498199%
-EPOCH: 3, Loss: 8.279768943786621
-```
-<img width="437" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/eca87c33-6386-47ac-9aec-45061da93faa">
+EPOCH:2
+--------------------------------------------------------------------------------
+SOURCE: 'So I heard.'
+TARGET: — Sì, ho sentito.
+PREDICTED: — Allora io .
+--------------------------------------------------------------------------------
+SOURCE: It is not a personal affair of my own but one of public welfare.
+TARGET: Questa faccenda non riguarda solo la mia persona, ma qui si tratta del bene generale.
+PREDICTED: Non è una cosa simile a me , ma una cosa di Dio .
+--------------------------------------------------------------------------------
+SOURCE: On one of the staircases, I met the physician of the family.
+TARGET: Su una delle scale incontrai il medico della famiglia.
+PREDICTED: Dopo un uomo , mi , mi parve che il mondo .
+--------------------------------------------------------------------------------
+SOURCE: 'No, I have done with that; it is time for me to die.'
+TARGET: — No, per me è finita. È tempo di morire.
+PREDICTED: — No , io sono content .
 
-```
-EPOCH: 4, Loss: 7.834333419799805
-EPOCH: 5, Loss: 7.4485907554626465
-EPOCH: 6, Loss: 7.1627092361450195
+EPOCH:4
+--------------------------------------------------------------------------------
+SOURCE: 'No, I have done with that; it is time for me to die.'
+TARGET: — No, per me è finita. È tempo di morire.
+PREDICTED: — No , io ho fatto con me ; è per me per me .
+--------------------------------------------------------------------------------
+SOURCE: And the heroism of the Serbs and Montenegrins, fighting for a great cause, aroused in the whole nation a desire to help their brothers not only with words but by deeds.
+TARGET: E l’eroismo dei serbi e dei montenegrini, che lottavano per una grande causa, aveva generato in tutto il popolo il desiderio di aiutare i fratelli non più con la parola, ma con l’azione.
+PREDICTED: E le della e le , per la guerra , si in modo , non solo non si a non avere né la sua volontà , ma la sua volontà non si .
+--------------------------------------------------------------------------------
+SOURCE: 'Oh no, Masha, Mr. Levin only says he can't believe...' said Kitty, blushing for Levin, and Levin understanding this became still more irritated and wished to answer, but Vronsky, with his bright and frank smile, came at once to the rescue of the conversation, which was threatening to become unpleasant.
+TARGET: — Ma no, Maša, Konstantin Dmitric dice che non ci può credere — disse Kitty, arrossendo per Levin, e questi lo capì e, irritatosi ancor più, voleva rispondere; ma Vronskij col suo sorriso aperto, cordiale, venne subito in aiuto della conversazione che minacciava di farsi spiacevole.
+PREDICTED: — Oh , no , principessa , Konstantin Dmitric , non può essere impossibile — disse Kitty , arrossendo per un ’ altra volta , e Levin , senza dubbio di nuovo aver pensato a Vronskij , e , dopo aver notato che il suo sorriso era stato contento di lei , era stato proprio proprio in quel momento in cui era stato stato stato deciso di lei .
+--------------------------------------------------------------------------------
+SOURCE: The pain she had inflicted on herself and her husband would now, she thought, be compensated for by the fact that the matter would be settled.
+TARGET: Il dolore ch’ella aveva causato a se stessa e al marito nel pronunziare quelle parole, sarebbe stato compensato, così ella immaginava, dal fatto che tutto si sarebbe definito.
+PREDICTED: La gelosia , per , si era per lei e ora , per quanto sarebbe stato necessario , sarebbe stato necessario per il denaro , sarebbe stato necessario .
 
-Class accuracy is: 48.725201%
-No obj accuracy is: 96.308342%
-Obj accuracy is: 61.208828%
+EPOCH:6
+--------------------------------------------------------------------------------
+SOURCE: One who did not conquer was Giovanni Acuto, and since he did not conquer his fidelity cannot be proved; but every one will acknowledge that, had he conquered, the Florentines would have stood at his discretion.
+TARGET: Quello che non vinse fu Giovanni Aucut, del quale, non vincendo, non si poteva conoscere la fede; ma ognuno confesserà che, vincendo, stavano Fiorentini a sua discrezione.
+PREDICTED: Una che non si el principe , e , avendo , avendo , non si può non essere odiato ; ma , che li aveva , li Orsini , li Orsini , li Orsini li Orsini , si .
+--------------------------------------------------------------------------------
+SOURCE: One who did not conquer was Giovanni Acuto, and since he did not conquer his fidelity cannot be proved; but every one will acknowledge that, had he conquered, the Florentines would have stood at his discretion.
+TARGET: Quello che non vinse fu Giovanni Aucut, del quale, non vincendo, non si poteva conoscere la fede; ma ognuno confesserà che, vincendo, stavano Fiorentini a sua discrezione.
+PREDICTED: Una che non si el principe , e , avendo , avendo , non si può non essere odiato ; ma , che li aveva , li Orsini , li Orsini , li Orsini li Orsini , si .
+--------------------------------------------------------------------------------
+SOURCE: Wishing to show his independence and to get promotion, he had refused a post that was offered him, hoping that this refusal would enhance his value, but it turned out that he had been too bold and he was passed over. Having then perforce to assume the role of an independent character, he played it very adroitly and cleverly, as though he had no grudge against anyone, did not feel himself at all offended, and only wished to be left in peace to enjoy himself.
+TARGET: Per dar prova della propria indipendenza e di voler progredire, aveva rifiutato una posizione offertagli, sperando che questo rifiuto potesse conferirgli maggior prestigio; accadde invece che fu giudicato troppo temerario, e fu lasciato stare; e ora, volente o nolente, acquistatasi questa fama di uomo libero, cercava di sostenerla, comportandosi con finezza e intelligenza, in modo da parere che non avesse rancore contro nessuno, che non si considerasse offeso da nessuno, e che volesse solo starsene in pace, perché contento di sé.
+PREDICTED: per parlargli del suo posto , voleva dare un ’ occhiata , ma che lo tormentava , per questo , per questo , il quale egli avrebbe dovuto , ma che era stato molto sicuro che lui era stato fatto molto , e che lui era stato fatto un ’ influenza , sebbene egli non avesse avuto parte di sé , e non solo non poteva capire che si con lui stesso , e che non era necessario , e non si poteva capire che cosa con lui .
+--------------------------------------------------------------------------------
+SOURCE: And the heroism of the Serbs and Montenegrins, fighting for a great cause, aroused in the whole nation a desire to help their brothers not only with words but by deeds.
+TARGET: E l’eroismo dei serbi e dei montenegrini, che lottavano per una grande causa, aveva generato in tutto il popolo il desiderio di aiutare i fratelli non più con la parola, ma con l’azione.
+PREDICTED: E i e i , per esempio , per un po ’ di guerra , si misero a dare uno scopo , ma non solo con la loro volontà , ma con la forza di non essere odiato .
 
-+++ TEST ACCURACIES
-Class accuracy is: 57.960655%
-No obj accuracy is: 97.526146%
-Obj accuracy is: 52.067055%
-
-EPOCH: 7, Loss: 7.011684417724609
-EPOCH: 8, Loss: 6.7238287925720215
-```
-
-<img width="444" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/fed8a3cf-0c99-46d0-be10-3e0ed754b154">
-
-```
-EPOCH: 9, Loss: 6.542272090911865
-EPOCH: 10, Loss: 6.382115364074707
-
-+++ TEST ACCURACIES
-Class accuracy is: 63.951229%
-No obj accuracy is: 96.849358%
-Obj accuracy is: 66.733170%
-EPOCH: 11, Loss: 6.283266067504883
-EPOCH: 12, Loss: 6.148199081420898
-EPOCH: 13, Loss: 6.106574058532715
-```
-
-<img width="442" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/962b03f2-5b11-497a-85f5-909498e24a58">
-
-```
-EPOCH: 14, Loss: 6.001038074493408
-+++ TRAIN ACCURACIES
-Class accuracy is: 56.644726%
-No obj accuracy is: 96.247818%
-Obj accuracy is: 69.856743%
-+++ TEST ACCURACIES
-Class accuracy is: 67.403717%
-No obj accuracy is: 97.583992%
-Obj accuracy is: 63.067329%
-EPOCH: 15, Loss: 5.91851806640625
-EPOCH: 16, Loss: 5.802373886108398
-EPOCH: 17, Loss: 5.707857608795166
-EPOCH: 18, Loss: 5.567074775695801
-```
-
-<img width="434" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/2a234a92-3f0f-41d6-afd0-a4d973a1ef4a">
-
-```
-+++ TEST ACCURACIES
-Class accuracy is: 66.566917%
-No obj accuracy is: 98.052994%
-Obj accuracy is: 60.052647%
-EPOCH: 19, Loss: 5.447572708129883
-EPOCH: 20, Loss: 5.322601795196533
-EPOCH: 21, Loss: 5.195068836212158
-EPOCH: 22, Loss: 5.106668949127197
-+++ TRAIN ACCURACIES
-Class accuracy is: 67.076813%
-No obj accuracy is: 95.820015%
-Obj accuracy is: 77.327820%
-+++ TEST ACCURACIES
-Class accuracy is: 76.968689%
-No obj accuracy is: 97.055359%
-Obj accuracy is: 74.319756%
-EPOCH: 23, Loss: 4.980020999908447
-```
-
-<img width="442" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/f9169ae8-9ed7-45e0-9d9e-44787b489fde">
-
-```
-EPOCH: 24, Loss: 4.837049961090088
-EPOCH: 25, Loss: 4.764085292816162
-EPOCH: 26, Loss: 4.589331150054932
-+++ TEST ACCURACIES
-Class accuracy is: 79.495705%
-No obj accuracy is: 97.869995%
-Obj accuracy is: 72.579666%
-EPOCH: 27, Loss: 4.507960796356201
-EPOCH: 28, Loss: 4.408302307128906
-```
-
-<img width="435" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/9b19b8c3-f1c9-4e4f-acd6-6cee7cbc603c">
-
-```
-EPOCH: 29, Loss: 4.3071184158325195
-EPOCH: 30, Loss: 4.165201187133789
-+++ TRAIN ACCURACIES
-Class accuracy is: 76.161743%
-No obj accuracy is: 96.402809%
-Obj accuracy is: 81.299088%
-+++ TEST ACCURACIES
-Class accuracy is: 84.477692%
-No obj accuracy is: 97.785561%
-Obj accuracy is: 76.201164%
-EPOCH: 31, Loss: 4.073633670806885
-EPOCH: 32, Loss: 3.936971664428711
-EPOCH: 33, Loss: 3.8076586723327637
-```
-
-<img width="440" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/e20eaeac-db83-4ea0-b02f-452ac564b9a2">
-
-```
-EPOCH: 34, Loss: 3.6981098651885986
-+++ TEST ACCURACIES
-Class accuracy is: 86.320312%
-No obj accuracy is: 97.800079%
-Obj accuracy is: 77.802719%
-EPOCH: 35, Loss: 3.5974011421203613
-EPOCH: 36, Loss: 3.4911625385284424
-EPOCH: 37, Loss: 3.3553738594055176
-EPOCH: 38, Loss: 3.260648250579834
-```
-
-<img width="436" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/09a0b520-a69b-410d-a5a8-5670cc5611d9">
-
-```
-+++ TRAIN ACCURACIES
-Class accuracy is: 83.479492%
-No obj accuracy is: 96.957603%
-Obj accuracy is: 82.855469%
-+++ TEST ACCURACIES
-Class accuracy is: 88.994179%
-No obj accuracy is: 98.185600%
-Obj accuracy is: 77.581047%
-+++ MAP:  0.4297582507133484
-EPOCH: 39, Loss: 3.1944639682769775
+EPOCH:8
+--------------------------------------------------------------------------------
+SOURCE: I heard one of your kind an hour ago, singing high over the wood: but its song had no music for me, any more than the rising sun had rays.
+TARGET: Da un'ora sento le vostre sorelle cantare nel bosco, ma per me il loro canto non aveva armonia:
+PREDICTED: " In un ' ora vi sentii udire un ' ora , ma il rumore delle sue finestre mi avevano fatto udire la musica , più alta e più alto che aveva una carnagione bianca .
+--------------------------------------------------------------------------------
+SOURCE: 'I had one girl, but God released me. I buried her in Lent.'
+TARGET: — Ho avuto una bambina, ma Dio mi ha liberata, l’ho sotterrata a quaresima.
+PREDICTED: — Ho una ragazza , ma io mi la sua parola .
+--------------------------------------------------------------------------------
+SOURCE: So I lay, and so he stood.
+TARGET: Ero sdraiato così io, così in piedi stava lui.
+PREDICTED: Così mi trovai , e così mi parve .
+--------------------------------------------------------------------------------
+SOURCE: We had here the Word of God to read, and no farther off from His Spirit to instruct than if we had been in England.
+TARGET: Qui avevamo per leggerli i divini volumi, nè lo spirito del Signore era per istruirci più lontano da noi che nol sarebbe stato nell’Inghilterra.
+PREDICTED: Noi avevamo la sua superiorità , e non avevamo più voglia di di , se avessimo avuto l ’ Inghilterra .
 ```
