@@ -35,9 +35,9 @@ TARGET: -- Ce sera difficile; j'ai dit qu'il était insurmontable, et je ne parl
 
 ## Learning Curves
 
-<img width="417" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/fde97cad-0945-4c27-b0a8-6fd4cd6093fa">
+<img width="415" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/6a11e17b-95a2-4265-9aa4-f203ecb73a65">
 
-<img width="411" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/e34865ad-80f1-44cb-be85-cd8253fa099e">
+<img width="418" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/68213db7-2f44-4c10-a491-11b92c52e0d1">
 
 
 ## Training Log
