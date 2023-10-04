@@ -2,425 +2,265 @@
 
 ## Introduction
 
-This assignment focusses on improving the previous code in terms of training time. We implement:
-1. One Cycle Policy
-2. 16-bit mixed Precision
-3. Removed data with more than 150 tokens
-4. Dynamic Padding Collate function
+This assignment focuses on getting more acquainted with the constituents of the transformer - encoder & the decode.
 
 ### Target
-1. Achieve Loss < 1.8
+The target is to define a single transformer class that has the capability to be both an encoder and a decoder - i.e. the same class be used to train BERT, GPT & ViT models.
 
 ### Metrics
-Final Train Loss: 1.552
-Model trained for 40 epochs
+#### BERT
 
-## Data Exploration
+10000 it: 4.3 Loss
 
-The dataset is the Opus Books dataset, involving translation from English to French.
+MLM task where the model is to predict the masked tokens
 
-```
-SOURCE: "Just leave me alone, will you?" he said, going to bed and turning his back.
-TARGET: —Fiche-moi la paix, hein! lui dit-il en se couchant et en tournant le dos.
 
-SOURCE: – Je suis bien jeune, monsieur, pour que l’on veuille m’écouter ; il faudrait un ordre écrit de votre main.
-TARGET: "I am very young, sir, to make them listen to me; I ought to have a written order from you."
+#### GPT
 
-SOURCE: "Will not monsieur take any supper to-night?"
-TARGET: «Monsieur soupera-t-il ce soir?»
+step 500 | train loss 0.2291 | val loss 7.0340
 
-SOURCE: "Hardly," was the answer. "I have called it insuperable, and I speak advisedly."
-TARGET: -- Ce sera difficile; j'ai dit qu'il était insurmontable, et je ne parle pas au hasard.»
-```
+Next token prediction task
 
-## Learning Curves
+#### ViT
 
-<img width="415" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/6a11e17b-95a2-4265-9aa4-f203ecb73a65">
+Epoch: 42 | train_loss: 1.1145 | train_acc: 0.2734 | test_loss: 1.0538 | test_acc: 0.5417
 
-<img width="418" alt="image" src="https://github.com/Madhur-1/ERA-v1/assets/64495917/68213db7-2f44-4c10-a491-11b92c52e0d1">
-
+Image Multiclass classification task
 
 ## Training Log
 
+### BERT
 ```
-EPOCH: 0, Loss: 6.790328025817871
---------------------------------------------------------------------------------
-SOURCE: The flood was drowning his mane, and his cry of distress never ceased; he uttered it more hoarsely, with his large open mouth stretched out.
-TARGET: Son cri de détresse ne cessait pas, le flot noyait sa criniere, qu'il le poussait plus rauque, de sa bouche tendue et grande ouverte.
-PREDICTED: La poitrine était sa femme , et sa voix ne pas , il se leva , et lui , avec ses yeux .
---------------------------------------------------------------------------------
-SOURCE: For the first time, he was received by them with civility.
-TARGET: Pour la première fois, il en fut reçu avec politesse.
-PREDICTED: En effet , il y avait , il avait avec les .
---------------------------------------------------------------------------------
-SOURCE: Let me look at you; let me contemplate you!"
-TARGET: Laissez que je vous voie, que je vous contemple!
-PREDICTED: - vous , je me !
---------------------------------------------------------------------------------
-SOURCE: I hoisted and attached myself to the same place, dividing my wonderment between the storm and this incomparable man who faced it head-on.
-TARGET: Je m'y étais hissé et attaché aussi, partageant mon admiration entre cette tempête et cet homme incomparable qui lui tenait tête.
-PREDICTED: Je me rappelle et de me voir mon père , mon esprit et la tête qui la tête qui lui .
-EPOCH: 1, CER: 0.6691739559173584, WER: 1.0598552227020264, BLEU: 0.0
-EPOCH: 1, Loss: 4.870634078979492
-EPOCH: 2, Loss: 4.1518874168396
---------------------------------------------------------------------------------
-SOURCE: The explanation of this fact could only be produced from the engineer's own lips, and they must wait for that till speech returned.
-TARGET: On ne pourrait avoir l'explication de ce fait que de la bouche de l'ingénieur. Il fallait pour cela attendre que la parole lui fût revenue.
-PREDICTED: L ' explication de cette explication ne pouvait que l ' ingénieur ne pas attendre à l ' ingénieur , et ils devaient attendre jusqu ' à ce mot .
---------------------------------------------------------------------------------
-SOURCE: In front of us stood the pilothouse, and unless I'm extremely mistaken, Captain Nemo must have been inside, steering his Nautilus himself.
-TARGET: Devant nous s'élevait la cage du timonier, et je me trompe fort, ou le capitaine Nemo devait être là, dirigeant lui-même son _Nautilus_.
-PREDICTED: En avant de nous , le fanal était en ce moment , et je ne m ' aurais pas eu eu l ' idée de nous faire , en se .
---------------------------------------------------------------------------------
-SOURCE: "And besides, the worry, the expense!
-TARGET: -- Et, d’ailleurs, les embarras, la dépense...
-PREDICTED: -- Et d ' ailleurs , les cordes , les cordes !
---------------------------------------------------------------------------------
-SOURCE: "Well?"
-TARGET: -- Eh bien?
-PREDICTED: -- Eh bien ?
-EPOCH: 3, CER: 0.6201037764549255, WER: 1.1073648929595947, BLEU: 0.0
-EPOCH: 3, Loss: 3.758406162261963
-EPOCH: 4, Loss: 3.5401690006256104
---------------------------------------------------------------------------------
-SOURCE: I owe everything to him!
-TARGET: Je lui doistout!
-PREDICTED: Je lui dois tout le croire !
---------------------------------------------------------------------------------
-SOURCE: – Il ne commettra plus la faute de passer par-dessus les murs, dit Clélia ; mais il sortira par la porte, s’il est acquitté.
-TARGET: "He will not make the mistake of going over the walls again," said Clelia, "but he will leave by the door if he is acquitted."
-PREDICTED: " He could not be the of the Corso ," said to the beginning ; " he was off , he was off at the door , he was .
---------------------------------------------------------------------------------
-SOURCE: He rose and came towards me, and I saw his face all kindled, and his full falcon-eye flashing, and tenderness and passion in every lineament.
-TARGET: Il se leva et s'avança vers moi; sa figure était brûlante, ses yeux de faucon brillaient; chacun de ses traits annonçait la tendresse et la passion.
-PREDICTED: Il se leva vers moi , et je vis toute sa face , et son œil , , et de passion .
---------------------------------------------------------------------------------
-SOURCE: Everything had disappeared in the midst of the vapour, the hot coal grew pale, and the women were nothing more than shadows with broken gestures.
-TARGET: Tout avait disparu au milieu de la vapeur, le charbon pâlissait, les femmes n'étaient plus que des ombres aux gestes cassés.
-PREDICTED: Tout avait disparu dans le milieu de la bataille , le charbon pâle , et les femmes ne s ' plus que des ombres .
-EPOCH: 5, CER: 0.5987424254417419, WER: 1.0403575897216797, BLEU: 0.0
-EPOCH: 5, Loss: 3.421630382537842
-EPOCH: 6, Loss: 3.357682466506958
---------------------------------------------------------------------------------
-SOURCE: God forgive me, how my heart bounded for joy, when hers, which was within touch of it, was breaking with sorrow!
-TARGET: Que Dieu me pardonne, mais mon coeur bondit de joie, tandis que le sien, qui était tout contre, se brisait de douleur.
-PREDICTED: - moi , mon coeur battait à mes yeux , lorsque le coeur de Dieu , c ’ était moi !
---------------------------------------------------------------------------------
-SOURCE: On her part Therese seemed to revel in daring.
-TARGET: Elle n'avait pas une hésitation, pas une peur.
-PREDICTED: Thérèse lui semblait que Thérèse fût dans son immobilité .
---------------------------------------------------------------------------------
-SOURCE: "Brother," said Jehan timidly, "I am come to see you."
-TARGET: « Mon frère, dit timidement Jehan, je viens vous voir. »
-PREDICTED: « Mon frère , dit timidement timidement timidement , je veux vous voir .
---------------------------------------------------------------------------------
-SOURCE: The admission of additional water was enough to shift its balance.
-TARGET: Une introduction d'eau avait suffi pour rompre son équilibre.
-PREDICTED: La plus d ' eau fut assez assez rapide pour mettre sa chemise .
-EPOCH: 7, CER: 0.6384326219558716, WER: 1.0973180532455444, BLEU: 0.0
-EPOCH: 7, Loss: 3.3343355655670166
-EPOCH: 8, Loss: 3.2895548343658447
---------------------------------------------------------------------------------
-SOURCE: CHAPTER 8 What Is the Decoration that Confers Distinction?
-TARGET: Chapitre VIII. Quelle est la décoration qui distingue ?
-PREDICTED: Qu ' est - ce que le 30 août ?
---------------------------------------------------------------------------------
-SOURCE: He stood considering me some minutes; then added, "She looks sensible, but not at all handsome."
-TARGET: Il me regarda quelques minutes, puis ajouta: «Sa figure exprime la sensibilité, mais elle n'est pas jolie.
-PREDICTED: -- Il me restait à quelques minutes ; puis elle ajouta : « Mais elle n ' est pas tres belle .
---------------------------------------------------------------------------------
-SOURCE: "Away!" he cried harshly; "keep at a distance, child; or go in to Sophie!"
-TARGET: «Éloigne-toi d'ici, enfant, s'écria-t-il durement, ou va jouer avec Sophie!»
-PREDICTED: « De loin ! s ' écria - t - il en soupirant : « , une enfant ou de loin ! »
---------------------------------------------------------------------------------
-SOURCE: Iremember that because we had a good laugh over it afterward.
-TARGET: Je me rappelle cela parce que nous en avons beaucoup ri, plustard.
-PREDICTED: que nous avions un rire quelconque .
-EPOCH: 9, CER: 0.645999014377594, WER: 1.1056619882583618, BLEU: 0.0
-EPOCH: 9, Loss: 3.1965136528015137
-EPOCH: 10, Loss: 3.105790376663208
---------------------------------------------------------------------------------
-SOURCE: For two hours our fishing proceeded energetically but without bringing up any rarities.
-TARGET: Pendant deux heures, notre pêche fut activement conduite, mais sans rapporter aucune rareté.
-PREDICTED: Pendant deux heures , nous fîmes des progrès sans lever la netteté .
---------------------------------------------------------------------------------
-SOURCE: Both understood that they must accept the position without hesitation, and finish the business at one stroke.
-TARGET: Ils comprirent tous deux qu'il fallait accepter la position sans hésiter et en finir d'un coup.
-PREDICTED: On comprit qu ' on devait naturellement le but sans hésiter , et , en finir .
---------------------------------------------------------------------------------
-SOURCE: 'A likely story indeed!' said the Pigeon in a tone of the deepest contempt.
-TARGET: « Voilà une histoire bien vraisemblable ! » dit le Pigeon d’un air de profond mépris.
-PREDICTED: « C ’ est une affaire , » dit le Pigeon d ’ un ton de mépris .
---------------------------------------------------------------------------------
-SOURCE: "Can he be inconstant before being happy?"
-TARGET: Serait-il volage avant d'être heureux?
-PREDICTED: -- Serait - il heureux avant d ' être heureux ?
-EPOCH: 11, CER: 0.6068885326385498, WER: 1.052022099494934, BLEU: 0.0
-EPOCH: 11, Loss: 3.003523826599121
-EPOCH: 12, Loss: 2.9121317863464355
---------------------------------------------------------------------------------
-SOURCE: Pray make my excuses to Pratt for not keeping my engagement, and dancing with him to-night.
-TARGET: « Dites a Pratt mon regret de ne pouvoir danser avec lui ce soir.
-PREDICTED: - vous ma paye pour ne pas avoir de ma toilette et de la taille avec lui .
---------------------------------------------------------------------------------
-SOURCE: But Gervaise, more curious, had not finished her questions.
-TARGET: Mais Gervaise, plus curieuse, n’était pas au bout de ses questions.
-PREDICTED: Mais Gervaise , plus curieux , n ’ avait pas fini de questions .
---------------------------------------------------------------------------------
-SOURCE: The model, lying with her head thrown back and her torso twisted sometimes laughed and threw her bosom forward, stretching her arms.
-TARGET: Dans le fond de l'atelier, un modèle, une femme était couchée, la tête ployée en arrière, le torse tordu, la hanche haute.
-PREDICTED: Le cerveau , la tête tendu , la tête flottante , la battait parfois , et la chair , la serrait les bras .
---------------------------------------------------------------------------------
-SOURCE: By the greatest accident, he did not fall off; from that moment he felt himself a hero.
-TARGET: Par un grand hasard, il ne tomba pas, de ce moment il se sentit un héros.
-PREDICTED: Par le plus grand malheur , il ne tomba pas de tomber , il se sentait un instant .
-EPOCH: 13, CER: 0.6067250370979309, WER: 1.0736483335494995, BLEU: 0.0
-EPOCH: 13, Loss: 2.8284356594085693
-EPOCH: 14, Loss: 2.710888624191284
---------------------------------------------------------------------------------
-SOURCE: Of the other men on board, I saw only my emotionless steward, who served me with his usual mute efficiency.
-TARGET: Des gens du bord, je ne vis que l'impassible stewart, qui me servit avec son exactitude et son mutisme ordinaires.
-PREDICTED: D ' autre part , je ne vis que mon stewart , qui me servait de son mouvement muet .
---------------------------------------------------------------------------------
-SOURCE: "I shall," replied d’Artagnan, "and instantly."
-TARGET: -- Je l'aurai, répondit d'Artagnan, et à l'instant même.
-PREDICTED: -- Je le veux , répondit d ' Artagnan , et aussitôt .
---------------------------------------------------------------------------------
-SOURCE: The other looked at him a moment, not surprised at what he said, but deeply moved at hearing him say it.
-TARGET: L’autre le regarda un instant, non pas surpris de ce qu’il disait, mais profondément ému de le lui entendre dire.
-PREDICTED: L ’ autre le regarda un moment , ne s ’ écria pas , mais il lui dit , en lui ayant profondément ému de dire .
---------------------------------------------------------------------------------
-SOURCE: Then a workman, passing in the dim light, says in a low voice, bantering: "Don't you go, little girl. He'll do you a mischief!"
-TARGET: Alors un ouvrier qui passe dans l’obscurité plaisante à mi-voix : – N’y va pas, ma petite, il te ferait mal !
-PREDICTED: Alors , un ouvrier de la lumière passait dans la lumière , en passant , à la voix basse , il ne vous pas !
-EPOCH: 15, CER: 0.6316837668418884, WER: 1.0773946046829224, BLEU: 0.0
-EPOCH: 15, Loss: 2.585113525390625
-EPOCH: 16, Loss: 2.4495458602905273
---------------------------------------------------------------------------------
-SOURCE: She accompanied the guests into the arcade, and Laurent also went down with a lamp in his hand.
-TARGET: Elle accompagna les invités jusque dans le passage, Laurent descendit aussi une lampe à la main.
-PREDICTED: Elle accompagnait les invités , et Laurent se mettait en large , la lampe au passage , dans sa main .
---------------------------------------------------------------------------------
-SOURCE: In your place I would stake the furniture against the horse."
-TARGET: A votre place, je jouerais vos harnais contre votre cheval.
-PREDICTED: Dans votre enjeu , je les meubles contre le cheval .
---------------------------------------------------------------------------------
-SOURCE: – C’est mon mari, dit l’hôtesse.
-TARGET: "This is my husband," said the landlady.
-PREDICTED: " It is my husband ," said the landlady .
---------------------------------------------------------------------------------
-SOURCE: I have prepared everything.
-TARGET: J’ai tout préparé.
-PREDICTED: J ’ ai tout réfléchi .
-EPOCH: 17, CER: 0.6058925986289978, WER: 1.091953992843628, BLEU: 0.0
-EPOCH: 17, Loss: 2.317978858947754
-EPOCH: 18, Loss: 2.213956117630005
---------------------------------------------------------------------------------
-SOURCE: As we moved forward, I heard a kind of pitter-patter above my head.
-TARGET: Tout en avançant, j'entendais une sorte de grésillement au-dessus de ma tête.
-PREDICTED: Nous en avant , j ' entendis un bon de ma tête .
---------------------------------------------------------------------------------
-SOURCE: It doesn't matter; my little wood-house opens into the alley.
-TARGET: Ça ne fait rien, mon petit bucher ouvre sur la ruelle…
-PREDICTED: Ça ne donne pas l ' affaire , mon petit bois donne en grande allée .
---------------------------------------------------------------------------------
-SOURCE: Already he was again blowing his horn, the band was lost in the distance, and the cry grew fainter:
-TARGET: Déja, il s'était remis a souffler dans sa corne, la bande se perdait au loin, avec le cri affaibli:
-PREDICTED: Déja , il soufflait de nouveau , la troupe s ' était perdue en loin , et le cri éclata .
---------------------------------------------------------------------------------
-SOURCE: One hands the letter to the porter with a contrite air; profound melancholy in the gaze.
-TARGET: On remet la lettre au portier d’un air contrit ; profonde mélancolie dans le regard.
-PREDICTED: Une lettre , toute la lettre au portier d ' un air profondément profonde ; dans le regard .
-EPOCH: 19, CER: 0.5947139263153076, WER: 1.0928906202316284, BLEU: 0.0
-EPOCH: 19, Loss: 2.1283602714538574
-EPOCH: 20, Loss: 2.0594046115875244
---------------------------------------------------------------------------------
-SOURCE: "Do you forgive me, Jane?"
-TARGET: -- Me pardonnez-vous? Jane.
-PREDICTED: -- M . Jane me pardonne - vous , Jane ?
---------------------------------------------------------------------------------
-SOURCE: "A disagreeable moment, a toll−gate, the passage of little to nothingness.
-TARGET: Un mauvais moment, un péage, le passage de peu de chose à rien.
-PREDICTED: – Un moment , un qui tient à la porte le centre du corps .
---------------------------------------------------------------------------------
-SOURCE: If the earth opened beneath them a miracle would save them.
-TARGET: Si la terre craquait sous eux, un miracle les sauverait.
-PREDICTED: Si la terre les a sous un miracle , il les .
---------------------------------------------------------------------------------
-SOURCE: Lydie drew back a few steps while he put his eye to a crack in the shutter.
-TARGET: Lydie recula de quelques pas, pendant qu'il mettait un oeil a la fente du volet.
-PREDICTED: Lydie recula quelques pas en , en lui disant ces quelques de prêtre .
-EPOCH: 21, CER: 0.5940598249435425, WER: 1.0774797201156616, BLEU: 0.0
-EPOCH: 21, Loss: 1.9962983131408691
-EPOCH: 22, Loss: 1.941123604774475
---------------------------------------------------------------------------------
-SOURCE: There he lodged a dozen of those pigeons which frequented the rocks of the plateau.
-TARGET: On y logea une douzaine de ces pigeons qui fréquentaient les hauts rocs du plateau.
-PREDICTED: Là il une douzaine de ces îles de récifs semblables .
---------------------------------------------------------------------------------
-SOURCE: They even mention one oyster, about which I remain dubious, that supposedly contained at least 150 sharks."
-TARGET: On a même cité une huître, mais je me permets d'en douter, qui ne contenait pas moins de cent cinquante requins.
-PREDICTED: On même les uns , dont je suis , et les principes , qui contenait au moins de cinquante mètres .
---------------------------------------------------------------------------------
-SOURCE: 'Your departure obliges me to speak ... It would be beyond my endurance not to see you any more.'
-TARGET: « Votre départ m’oblige à parler… Il serait au-dessus de mes forces de ne plus vous voir. »
-PREDICTED: Votre départ pour me parler … ce serait sans ma dernière fois de ne pas vous voir .
---------------------------------------------------------------------------------
-SOURCE: Mr. Fogg and his two companions took their places on a bench opposite the desks of the magistrate and his clerk.
-TARGET: Fogg, Mrs. Aouda et Passepartout s'assirent sur un banc en face des sièges réservés au magistrat et au greffier.
-PREDICTED: Fogg et ses deux compagnons s ' sur un banc , s ' sur un banc du magistrat à son clerc et ses deux compagnons .
-EPOCH: 23, CER: 0.5951004028320312, WER: 1.0983396768569946, BLEU: 0.0
-EPOCH: 23, Loss: 1.8925286531448364
-EPOCH: 24, Loss: 1.8515833616256714
---------------------------------------------------------------------------------
-SOURCE: I have only been able to find a few which I seem to have jotted down almost unconsciously.
-TARGET: Je n'ai plus retrouvé que quelques observations fugitives et prises machinalement pour ainsi dire.
-PREDICTED: Je n ' ai pu seul trouver en un qui me semble sans m ' douter .
---------------------------------------------------------------------------------
-SOURCE: The obstinate sailor did not reply, and let the conversation drop, quite determined to resume it again.
-TARGET: L'entêté marin ne répondit pas et laissa tomber la conversation, bien décidé à la reprendre.
-PREDICTED: L ' obstiné marin ne répondit pas , qui laissa la conversation se préparer à reprendre .
---------------------------------------------------------------------------------
-SOURCE: "No, an islet lost in the Pacific, and which perhaps has never been visited."
-TARGET: -- Non, un îlot perdu dans le Pacifique, et qui n'a jamais été visité peut-être!
-PREDICTED: -- Non , un îlot du Pacifique , et qui n ' ait jamais été vu .
---------------------------------------------------------------------------------
-SOURCE: "You couldn't get very hard hit over that." "Couldn't you?" he snarled.
-TARGET: -- Vous n'avez pas dû être fortement atteint à ce jeu-là?
-PREDICTED: -- Vous ne pouvez pas me rendre facilement dur de cette .
-EPOCH: 25, CER: 0.5957693457603455, WER: 1.0738186836242676, BLEU: 0.0
-EPOCH: 25, Loss: 1.8123170137405396
-EPOCH: 26, Loss: 1.7772434949874878
---------------------------------------------------------------------------------
-SOURCE: C’était un homme tres rusé que ce Stangerson et qui se tenait toujours sur ses gardes.
-TARGET: He was cunning, was Stangerson, and always on his guard.
-PREDICTED: It was a man who was up with this and passed them on his oaths .
---------------------------------------------------------------------------------
-SOURCE: 'Look at that!
-TARGET: – Allons, bon !
-PREDICTED: – Voyez !
---------------------------------------------------------------------------------
-SOURCE: – Il ne commettra plus la faute de passer par-dessus les murs, dit Clélia ; mais il sortira par la porte, s’il est acquitté.
-TARGET: "He will not make the mistake of going over the walls again," said Clelia, "but he will leave by the door if he is acquitted."
-PREDICTED: " He will not come more the time to stop but the ," said Clelia . " but he is from the door .
---------------------------------------------------------------------------------
-SOURCE: "Well, I'm going to chuck him out," replied Joe.
-TARGET: – Ma foi, je vais le flanquer dehors.
-PREDICTED: -- Eh bien , je vais le gronder , répliqua Joe .
-EPOCH: 27, CER: 0.5889015793800354, WER: 1.0851426124572754, BLEU: 0.0
-EPOCH: 27, Loss: 1.7460441589355469
-EPOCH: 28, Loss: 1.718700885772705
---------------------------------------------------------------------------------
-SOURCE: She turned down a street; she recognised him by his curling hair that escaped from beneath his hat.
-TARGET: Elle tournait une rue; elle le reconnaissait à sa chevelure frisée qui s’échappait de son chapeau.
-PREDICTED: Elle se retourna sur une rue , elle le reconnut en relevant ses cheveux qui s ’ échappa du chapeau de son chapeau .
---------------------------------------------------------------------------------
-SOURCE: Hunger, the fresh air, the calm quiet weather, after the commotions we had gone through, all contributed to give me a good appetite.
-TARGET: Le besoin, le grand air, le calme après les agitations, tout contribuait à me mettre en appétit.
-PREDICTED: La faim , le temps est nouveau , le calme du temps présent , après l ' être , tous mes chances pour m ' établir .
---------------------------------------------------------------------------------
-SOURCE: 'Your departure obliges me to speak ... It would be beyond my endurance not to see you any more.'
-TARGET: « Votre départ m’oblige à parler… Il serait au-dessus de mes forces de ne plus vous voir. »
-PREDICTED: Votre départ m ’ est accoutumé à parler … Il sera possible de ne pas vous revoir davantage .
---------------------------------------------------------------------------------
-SOURCE: Born a Gascon but bred a Norman, he grafted upon his southern volubility the cunning of the Cauchois.
-TARGET: Né Gascon, mais devenu Normand, il doublait sa faconde méridionale de cautèle cauchoise.
-PREDICTED: Il faut un vrai Gascon mais un du Sud , et il fallait .
-EPOCH: 29, CER: 0.5854974389076233, WER: 1.06956148147583, BLEU: 0.0
-EPOCH: 29, Loss: 1.6938942670822144
-EPOCH: 30, Loss: 1.6710034608840942
---------------------------------------------------------------------------------
-SOURCE: The day was drawing in.
-TARGET: Le jour tombait.
-PREDICTED: Le jour fut dans le salon .
---------------------------------------------------------------------------------
-SOURCE: "Come at once," she said; "they are laying the table, and we'll have supper."
-TARGET: --Venez vite, on met la table, disait-elle, nous allons souper.
-PREDICTED: « Venez aussitôt ,» dit - elle . Elles me la table , et nous allons souper .
---------------------------------------------------------------------------------
-SOURCE: She does not yet leave her dressing-room.
-TARGET: Elle sera satisfaite de vous voir tous les trois.
-PREDICTED: Elle ne quitta pas son cabinet de toilette .
---------------------------------------------------------------------------------
-SOURCE: "Levaque's wife is catching it," Maheu peacefully stated as he scraped the bottom of his bowl with the spoon.
-TARGET: —La Levaque reçoit sa danse, constata paisiblement Maheu, en train de racler le fond de sa jatte avec la cuiller.
-PREDICTED: — La Levaque de — Dame est enceinte , dit paisiblement Maheu , en s ' asseyant sur ses .
-EPOCH: 31, CER: 0.5903732776641846, WER: 1.0876117944717407, BLEU: 0.0
-EPOCH: 31, Loss: 1.650494933128357
-EPOCH: 32, Loss: 1.632812738418579
---------------------------------------------------------------------------------
-SOURCE: A heavy bag immediately plunged into the sea.
-TARGET: Un sac pesant tomba aussitôt à la mer.
-PREDICTED: Un sac se précipité aussitôt à la mer .
---------------------------------------------------------------------------------
-SOURCE: Ah! your dress is damp."
-TARGET: Ah! ta robe est mouillée!
-PREDICTED: Ah ! ta robe est humide !
---------------------------------------------------------------------------------
-SOURCE: "Down there?" repeated my uncle.
-TARGET: --Là-bas?» répond mon oncle.
-PREDICTED: -- À bas ? répétait mon oncle .
---------------------------------------------------------------------------------
-SOURCE: He entangled himself in between four chairs all at once.
-TARGET: Il s’embarrassait dans quatre chaises à la fois.
-PREDICTED: Il s ’ embarrassait dans quatre chaises .
-EPOCH: 33, CER: 0.5885300040245056, WER: 1.0750106573104858, BLEU: 0.0
-EPOCH: 33, Loss: 1.6164131164550781
-EPOCH: 34, Loss: 1.6022331714630127
---------------------------------------------------------------------------------
-SOURCE: "There is no one with a better heart than Charles; but his own life moves so smoothly that he cannot understand that others may have trouble.
-TARGET: Personne n'a meilleur coeur que Charles, mais sa vie s'écoule si doucement qu'il ne peut comprendre que d'autres aient des ennuis.
-PREDICTED: Il n ’ y a personne pour le cœur mieux que Charles ; mais sa vie ne pas qu ’ il puisse comprendre les autres .
---------------------------------------------------------------------------------
-SOURCE: "Musnier, we'll kiss your wife."
-TARGET: – Musnier, nous chiffonnerons ta femme.
-PREDICTED: – Musnier , nous ton femme .
---------------------------------------------------------------------------------
-SOURCE: It consisted of these words:
-TARGET: Cette dédicace portrait ces seul mots:
-PREDICTED: Il se présenta à ces mots .
---------------------------------------------------------------------------------
-SOURCE: No weakness!
-TARGET: Pas de faiblesse!
-PREDICTED: Non ! pas !
-EPOCH: 35, CER: 0.5852893590927124, WER: 1.0850574970245361, BLEU: 0.0
-EPOCH: 35, Loss: 1.5884604454040527
-EPOCH: 36, Loss: 1.5768758058547974
---------------------------------------------------------------------------------
-SOURCE: Demandez à votre baron de quelle peine il veut punir ce moment de folie.
-TARGET: Ask your Barone with what penalty he proposes to punish this moment of folly?"
-PREDICTED: to your mind if he had the moment to have only loved her .
---------------------------------------------------------------------------------
-SOURCE: "And I," said Treville, coldly, "I have some pretty things to tell your Majesty concerning these gownsmen."
-TARGET: -- Et moi, dit froidement M. de Tréville, j'en ai de belles à apprendre à Votre Majesté sur ses gens de robe.
-PREDICTED: -- Et moi , dit Tréville froidement , j ' ai là des choses à Votre Majesté .
---------------------------------------------------------------------------------
-SOURCE: Chuck him in among his own cinders!
-TARGET: Roulez-le dans son tas de cendre.
-PREDICTED: - le parmi les sienne !
---------------------------------------------------------------------------------
-SOURCE: The sun, fairly low on the horizon, struck full force on the houses in this town, accenting their whiteness.
-TARGET: Le soleil, assez bas sur l'horizon, frappait en plein les maisons de la ville et faisait ressortir leur blancheur.
-PREDICTED: La brise , belle à l ' horizon , toute de bonne humeur vers les maisons , leur souffle .
-EPOCH: 37, CER: 0.5861069560050964, WER: 1.0811408758163452, BLEU: 0.0
-EPOCH: 37, Loss: 1.566548228263855
-EPOCH: 38, Loss: 1.5586274862289429
---------------------------------------------------------------------------------
-SOURCE: Guillaume! thou art the largest, and Pasquier is the smallest, and Pasquier does best.
-TARGET: Rends-les tous sourds comme moi.
-PREDICTED: Guillaume ! tu es l ’ art le plus grand et le plus gros , et Pasquier est le plus grand .
---------------------------------------------------------------------------------
-SOURCE: It was empty.
-TARGET: Il était vide!
-PREDICTED: C ' était vide .
---------------------------------------------------------------------------------
-SOURCE: "Well, Herbert," replied the engineer, "you are right to attach great importance to this fact.
-TARGET: «Bien, Harbert, répondit l'ingénieur, tu as raison d'attacher une grande importance à ce fait.
-PREDICTED: -- Eh bien , Harbert , répondit l ' ingénieur , vous devez prudent de résoudre en cet endroit .
---------------------------------------------------------------------------------
-SOURCE: Bingley was every thing that was charming, except the professed lover of her daughter.
-TARGET: Bennet ne réussirent pas ce soir-la.
-PREDICTED: Jones si la chose était charmante , c ’ était l ’ amant de sa fille .
-EPOCH: 39, CER: 0.5860028862953186, WER: 1.0824180841445923, BLEU: 0.0
-EPOCH: 39, Loss: 1.5520380735397339
+it: 9000  | loss 4.39  | Δw: 11.509
+it: 9010  | loss 4.47  | Δw: 12.076
+it: 9020  | loss 4.43  | Δw: 12.514
+it: 9030  | loss 4.35  | Δw: 11.198
+it: 9040  | loss 4.44  | Δw: 12.531
+it: 9050  | loss 4.48  | Δw: 11.5
+it: 9060  | loss 4.42  | Δw: 11.833
+it: 9070  | loss 4.46  | Δw: 12.736
+it: 9080  | loss 4.44  | Δw: 12.165
+it: 9090  | loss 4.44  | Δw: 12.193
+it: 9100  | loss 4.48  | Δw: 11.598
+it: 9110  | loss 4.37  | Δw: 12.063
+it: 9120  | loss 4.51  | Δw: 11.885
+it: 9130  | loss 4.45  | Δw: 12.353
+it: 9140  | loss 4.43  | Δw: 11.85
+it: 9150  | loss 4.39  | Δw: 12.269
+it: 9160  | loss 4.39  | Δw: 11.942
+it: 9170  | loss 4.36  | Δw: 12.306
+it: 9180  | loss 4.4  | Δw: 12.183
+it: 9190  | loss 4.48  | Δw: 12.15
+it: 9200  | loss 4.42  | Δw: 12.272
+it: 9210  | loss 4.42  | Δw: 12.253
+it: 9220  | loss 4.46  | Δw: 13.418
+it: 9230  | loss 4.4  | Δw: 12.831
+it: 9240  | loss 4.39  | Δw: 12.136
+it: 9250  | loss 4.38  | Δw: 13.013
+it: 9260  | loss 4.37  | Δw: 12.107
+it: 9270  | loss 4.44  | Δw: 12.382
+it: 9280  | loss 4.32  | Δw: 12.364
+it: 9290  | loss 4.47  | Δw: 11.497
+it: 9300  | loss 4.34  | Δw: 11.932
+it: 9310  | loss 4.39  | Δw: 12.593
+it: 9320  | loss 4.46  | Δw: 12.455
+it: 9330  | loss 4.39  | Δw: 12.459
+it: 9340  | loss 4.33  | Δw: 12.311
+it: 9350  | loss 4.35  | Δw: 12.406
+it: 9360  | loss 4.51  | Δw: 12.365
+it: 9370  | loss 4.51  | Δw: 12.074
+it: 9380  | loss 4.47  | Δw: 11.953
+it: 9390  | loss 4.46  | Δw: 12.269
+it: 9400  | loss 4.17  | Δw: 12.16
+it: 9410  | loss 4.38  | Δw: 11.511
+it: 9420  | loss 4.18  | Δw: 12.128
+it: 9430  | loss 4.36  | Δw: 11.96
+it: 9440  | loss 4.4  | Δw: 12.873
+it: 9450  | loss 4.38  | Δw: 12.159
+it: 9460  | loss 4.58  | Δw: 13.319
+it: 9470  | loss 4.43  | Δw: 12.513
+it: 9480  | loss 4.55  | Δw: 11.999
+it: 9490  | loss 4.28  | Δw: 12.732
+it: 9500  | loss 4.34  | Δw: 12.097
+it: 9510  | loss 4.46  | Δw: 12.751
+it: 9520  | loss 4.49  | Δw: 12.123
+it: 9530  | loss 4.32  | Δw: 12.09
+it: 9540  | loss 4.5  | Δw: 12.6
+it: 9550  | loss 4.38  | Δw: 12.654
+it: 9560  | loss 4.53  | Δw: 12.361
+it: 9570  | loss 4.37  | Δw: 12.642
+it: 9580  | loss 4.41  | Δw: 12.462
+it: 9590  | loss 4.53  | Δw: 12.512
+it: 9600  | loss 4.46  | Δw: 13.208
+it: 9610  | loss 4.28  | Δw: 13.396
+it: 9620  | loss 4.36  | Δw: 12.489
+it: 9630  | loss 4.28  | Δw: 12.354
+it: 9640  | loss 4.38  | Δw: 12.494
+it: 9650  | loss 4.45  | Δw: 12.74
+it: 9660  | loss 4.33  | Δw: 13.338
+it: 9670  | loss 4.31  | Δw: 11.995
+it: 9680  | loss 4.33  | Δw: 12.443
+it: 9690  | loss 4.48  | Δw: 12.529
+it: 9700  | loss 4.27  | Δw: 13.019
+it: 9710  | loss 4.51  | Δw: 12.768
+it: 9720  | loss 4.45  | Δw: 12.266
+it: 9730  | loss 4.33  | Δw: 12.358
+it: 9740  | loss 4.45  | Δw: 13.142
+it: 9750  | loss 4.33  | Δw: 12.587
+it: 9760  | loss 4.49  | Δw: 12.97
+it: 9770  | loss 4.4  | Δw: 12.928
+it: 9780  | loss 4.44  | Δw: 12.851
+it: 9790  | loss 4.24  | Δw: 12.528
+it: 9800  | loss 4.37  | Δw: 12.896
+it: 9810  | loss 4.3  | Δw: 12.968
+it: 9820  | loss 4.41  | Δw: 12.912
+it: 9830  | loss 4.38  | Δw: 12.933
+it: 9840  | loss 4.38  | Δw: 12.847
+it: 9850  | loss 4.19  | Δw: 12.809
+it: 9860  | loss 4.36  | Δw: 12.819
+it: 9870  | loss 4.3  | Δw: 12.916
+it: 9880  | loss 4.3  | Δw: 13.15
+it: 9890  | loss 4.52  | Δw: 12.605
+it: 9900  | loss 4.37  | Δw: 12.817
+it: 9910  | loss 4.45  | Δw: 12.639
+it: 9920  | loss 4.41  | Δw: 13.198
+it: 9930  | loss 4.29  | Δw: 13.123
+it: 9940  | loss 4.39  | Δw: 13.814
+it: 9950  | loss 4.39  | Δw: 12.96
+it: 9960  | loss 4.3  | Δw: 12.604
+it: 9970  | loss 4.33  | Δw: 13.448
+it: 9980  | loss 4.44  | Δw: 12.589
+it: 9990  | loss 4.3  | Δw: 13.889
+```
+
+### GPT
+```
+step        400 | loss 0.5148
+step        401 | loss 0.5744
+step        402 | loss 0.5668
+step        403 | loss 0.5224
+step        404 | loss 0.4652
+step        405 | loss 0.4447
+step        406 | loss 0.4686
+step        407 | loss 0.4885
+step        408 | loss 0.5444
+step        409 | loss 0.4380
+step        410 | loss 0.5071
+step        411 | loss 0.4489
+step        412 | loss 0.4985
+step        413 | loss 0.4810
+step        414 | loss 0.5410
+step        415 | loss 0.4693
+step        416 | loss 0.4532
+step        417 | loss 0.4703
+step        418 | loss 0.4330
+step        419 | loss 0.4134
+step        420 | loss 0.4598
+step        421 | loss 0.4652
+step        422 | loss 0.4835
+step        423 | loss 0.4332
+step        424 | loss 0.4238
+step        425 | loss 0.4313
+step        426 | loss 0.4541
+step        427 | loss 0.4654
+step        428 | loss 0.4881
+step        429 | loss 0.4452
+step        430 | loss 0.4548
+step        431 | loss 0.4165
+step        432 | loss 0.4027
+step        433 | loss 0.4202
+step        434 | loss 0.3811
+step        435 | loss 0.3763
+step        436 | loss 0.4419
+step        437 | loss 0.4716
+step        438 | loss 0.4290
+step        439 | loss 0.4053
+step        440 | loss 0.4019
+step        441 | loss 0.3829
+step        442 | loss 0.4836
+step        443 | loss 0.3957
+step        444 | loss 0.4427
+step        445 | loss 0.4602
+step        446 | loss 0.4059
+step        447 | loss 0.4285
+step        448 | loss 0.3779
+step        449 | loss 0.4175
+step        450 | loss 0.4418
+step        451 | loss 0.3834
+step        452 | loss 0.4341
+step        453 | loss 0.4537
+step        454 | loss 0.3371
+step        455 | loss 0.3931
+step        456 | loss 0.3747
+step        457 | loss 0.3936
+step        458 | loss 0.3463
+step        459 | loss 0.4057
+step        460 | loss 0.3425
+step        461 | loss 0.3832
+step        462 | loss 0.3830
+step        463 | loss 0.4011
+step        464 | loss 0.3936
+step        465 | loss 0.3821
+step        466 | loss 0.4207
+step        467 | loss 0.3564
+step        468 | loss 0.3219
+step        469 | loss 0.3447
+step        470 | loss 0.3577
+step        471 | loss 0.3370
+step        472 | loss 0.4545
+step        473 | loss 0.3397
+step        474 | loss 0.3321
+step        475 | loss 0.3419
+step        476 | loss 0.3399
+step        477 | loss 0.3936
+step        478 | loss 0.3481
+step        479 | loss 0.3673
+step        480 | loss 0.3483
+step        481 | loss 0.3479
+step        482 | loss 0.3520
+step        483 | loss 0.3587
+step        484 | loss 0.3433
+step        485 | loss 0.3411
+step        486 | loss 0.3224
+step        487 | loss 0.3393
+step        488 | loss 0.3368
+step        489 | loss 0.3672
+step        490 | loss 0.3318
+step        491 | loss 0.3594
+step        492 | loss 0.3754
+step        493 | loss 0.3052
+step        494 | loss 0.3041
+step        495 | loss 0.3151
+step        496 | loss 0.3541
+step        497 | loss 0.3129
+step        498 | loss 0.3089
+step        499 | train loss 0.2291 | val loss 7.0340
+step        499 | loss 0.3225
+```
+
+### ViT
+```
+Epoch: 20 | train_loss: 1.1507 | train_acc: 0.2930 | test_loss: 1.2421 | test_acc: 0.1979
+Epoch: 21 | train_loss: 1.0846 | train_acc: 0.4453 | test_loss: 1.1815 | test_acc: 0.2604
+Epoch: 22 | train_loss: 1.1038 | train_acc: 0.4258 | test_loss: 1.1374 | test_acc: 0.2604
+Epoch: 23 | train_loss: 1.1343 | train_acc: 0.3047 | test_loss: 1.1025 | test_acc: 0.2604
+Epoch: 24 | train_loss: 1.1344 | train_acc: 0.2812 | test_loss: 1.0378 | test_acc: 0.5417
+Epoch: 25 | train_loss: 1.1292 | train_acc: 0.2891 | test_loss: 1.1337 | test_acc: 0.2604
+Epoch: 26 | train_loss: 1.0929 | train_acc: 0.4297 | test_loss: 1.0573 | test_acc: 0.5417
+Epoch: 27 | train_loss: 1.1268 | train_acc: 0.2812 | test_loss: 1.0592 | test_acc: 0.5417
+Epoch: 28 | train_loss: 1.1325 | train_acc: 0.3047 | test_loss: 1.1948 | test_acc: 0.1979
+Epoch: 29 | train_loss: 1.1569 | train_acc: 0.2969 | test_loss: 1.1696 | test_acc: 0.2604
+Epoch: 30 | train_loss: 1.0886 | train_acc: 0.4414 | test_loss: 1.0279 | test_acc: 0.5417
+Epoch: 31 | train_loss: 1.1584 | train_acc: 0.2812 | test_loss: 1.0452 | test_acc: 0.5417
+Epoch: 32 | train_loss: 1.0817 | train_acc: 0.4023 | test_loss: 1.2420 | test_acc: 0.1979
+Epoch: 33 | train_loss: 1.1465 | train_acc: 0.2930 | test_loss: 1.2285 | test_acc: 0.1979
+Epoch: 34 | train_loss: 1.1194 | train_acc: 0.3203 | test_loss: 1.1031 | test_acc: 0.2604
+Epoch: 35 | train_loss: 1.0948 | train_acc: 0.3906 | test_loss: 1.0202 | test_acc: 0.5417
+Epoch: 36 | train_loss: 1.1548 | train_acc: 0.2812 | test_loss: 1.0535 | test_acc: 0.5417
+Epoch: 37 | train_loss: 1.1379 | train_acc: 0.3086 | test_loss: 1.1902 | test_acc: 0.1979
+Epoch: 38 | train_loss: 1.1138 | train_acc: 0.2812 | test_loss: 1.0961 | test_acc: 0.1979
+Epoch: 39 | train_loss: 1.0850 | train_acc: 0.4141 | test_loss: 1.1648 | test_acc: 0.1979
+Epoch: 40 | train_loss: 1.0922 | train_acc: 0.4141 | test_loss: 1.1788 | test_acc: 0.1979
+Epoch: 41 | train_loss: 1.1308 | train_acc: 0.2930 | test_loss: 1.1288 | test_acc: 0.1979
+Epoch: 42 | train_loss: 1.1145 | train_acc: 0.2734 | test_loss: 1.0538 | test_acc: 0.5417
 ```
