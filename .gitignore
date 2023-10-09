@@ -7,7 +7,7 @@ S13/Gradio App/Store/epoch=39-step=16560.ckpt
 S15/Store/weights/epoch=9-step=18190.ckpt
 S17_Orig/
 S16/Store/weights/epoch=39-step=19800.ckpt
-
+S18/U-Net/store/OxfordPetDataset/
 */.swp
 
 .DS_Store

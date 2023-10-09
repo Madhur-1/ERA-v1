@@ -1,6 +1,6 @@
-![Legend](data/image.png)
+![Legend](store/image.png)
 
-![Validation Accuracy](data/image-1.png)
+![Validation Accuracy](store/image-1.png)
 
-![Validation Accuracy (Smoothed)](data/image-2.png)
+![Validation Accuracy (Smoothed)](store/image-2.png)
 
