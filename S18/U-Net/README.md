@@ -1,8 +1,12 @@
-![Legend](store/image.png "Legend")
 
-![Validation Accuracy](store/image-1.png "Validation Accuracy")
 
-![Validation Accuracy (Smoothed)](store/image-2.png "Validation Accuracy (Smoothed)")
+
+
+
+
+|Legend | Val Acc      | Val Acc (Smoothed) |
+| ---------- | ----------- | ----------- |
+|![Legend](store/image.png "Legend")|![Validation Accuracy](store/image-1.png "Validation Accuracy")|![Validation Accuracy (Smoothed)](store/image-2.png "Validation Accuracy (Smoothed)")|
 
 ## Some observations
 1. Comparing A and C - The only difference is the channel-size reduction method used (MaxPooling in A and StridedConvolution in C). We see that a outperforms C by a small margin in accuracy. Thus MaxPooling is preferred for a U-Net.
