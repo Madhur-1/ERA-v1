@@ -1,0 +1,6 @@
+dropout: 0
+expansion_method: strided_conv_transpose
+loss_fn: dice
+lr: 0.001
+max_filter_size: 512
+reduction_method: max_pool
