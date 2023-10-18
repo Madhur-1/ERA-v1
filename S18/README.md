@@ -56,7 +56,7 @@ b. Training VAE's on the MNIST and CIFAR10 datasets. The twist to the assignment
 The VAE's have a Encoder-Decoder structure. 
 ![Alt text](image-4.png)
 
-There is an extra input - the label of the image. 
+There is an extra input - the label of the image (we perturb the input label to not match the input image for say 10% of the times). 
 This label is passed through an embedding layer and then added to the mu and sigma layers of the latent space.
 The final reconstructed image is passed through a classification network (usually the encoder network, pretrained to predict the output label with a classification head) to predict the label of the image and this is compared with the given label. The NLLLoss of this prediction is added to the loss function, weighted by a factor of `lamda_label_loss`.
 
